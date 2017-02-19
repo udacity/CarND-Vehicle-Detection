@@ -57,13 +57,13 @@ def visualize_hog_features(hog_features, images, color_map = None):
 # Here is your draw_boxes function from the previous exercise
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     # Make a copy of the image
-    imcopy = np.copy(img)
+    copy_image = np.copy(img)
     # Iterate through the bounding boxes
     for bbox in bboxes:
         # Draw a rectangle given bbox coordinates
-        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
+        cv2.rectangle(copy_image, bbox[0], bbox[1], color, thick)
     # Return the image copy with boxes drawn
-    return imcopy
+    return copy_image
 
 if __name__ == '__main__':
     import  vehicle
