@@ -28,19 +28,47 @@ TODO: xxx
 
 ### Vehicle Detection Pipeline
 
+Following figure shows the Vehicle detection pipeline we used for this project. As picture depicted, pipeline starts with the sliding window process. Next, the extracted image patch goes to the feature generation stage. Generated features are used as the input of the machine learning algorithm. For this project, we used Linear Support Vector Machine as our machine learning algorithm. Based on the output of the machine learning model, we added sliding windows to the heat map. Finally, heat map is thresholded to extract vehicle bounding boxes.
+
+Next, we are going to discuss these pipeline stages in detail.  
+
 ### Feature Extraction
 
-#### Histogram of Oriented Gradients (HOG)
+The success of traditional machine learning algorithms is mainly depends in the features we used to train that algorithms
+.
+###### Histogram of Oriented Gradients (HOG)
+xxxx
 
-#### Spacial Binning
+###### Spacial Binning
+
+xxxx
 
 ### Training the Machine Learning Model
+When it comes to selecting a machine learning algorithm for vehicle tracking problem, I had two concerns namely: accuracy and speed. So I picked Linear SVM classifier because it provides a reasonable trade off between speed and accuracy.
+
+The subset of vehicle and non-vehicle images of the [GTI Vehicle Image Database](http://www.gti.ssr.upm.es/data/Vehicle_database.html) was used for the training. The sample of vehicle and non-vehicle images of that dataset is shown below.
+
+<p align="center">
+    <img src="./images/vehicle_sample.png"/>
+</p>
+
+<p align="center">
+    <img src="./images/non_vehicle_sample.png"/>
+</p>
 
 ### Sliding Windows for Identifying Vehicles
 
 ## Output
 
 ## Conclusions and Future Improvements
+
+## References
+
+[1]. xxxx
+
+[2]. zzzz
+
+[3]. zzzz
 
 ----------------------------------------------------
 # Vehicle Detection
