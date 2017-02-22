@@ -1,3 +1,39 @@
+# Self-Driving Car Engineer Nanodegree
+## Vehicle Detection
+
+### Overview
+The objective of this project is identify and tracking road vehicles using traditional computer vision and machine learning techniques such as histogram of oriented gradients (HOG) and support vector machines (SVM). In the first phase of the project, we high quality trained a vehicle classifier models using SVM. HOG and special binning techniques were used to extract features. Next, using sliding window method, we extracted imaged patches from road images. Those images patches were used to extract features and ran against SVM model. The output of the SVM indicates whether the given patch is a vehicle or not.
+
+Following animation shows the performance of our final model against a road video.
+
+<p align="center">
+    <img src="./images/project_output.gif"/>
+</p>
+
+### Dependencies
+
+This project requires Python 3.5+ and the following libraries installed.
+
+- [Numpy](http://www.numpy.org/)
+- [SciPy](https://www.scipy.org/)
+- [OpenCV](http://opencv.org/)
+- [Scikit-Learn](http://scikit-learn.org)
+- [Matplotlib](http://matplotlib.org/) (Optional)
+
+### How to Run the Vehicle Detector?
+TODO: xxx
+
+
+## Implementation
+
+### Vehicle Detection Pipeline
+
+### Training the Machine Learning Model
+
+### 
+
+
+----------------------------------------------------
 # Vehicle Detection
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
@@ -8,7 +44,7 @@ Creating a great writeup:
 ---
 A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :).
 
 You can submit your writeup in markdown or use another method and submit a pdf instead.
 
@@ -18,7 +54,7 @@ The Project
 The goals / steps of this project are the following:
 
 * Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
+* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector.
 * Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
 * Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
 * Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
