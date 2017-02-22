@@ -28,10 +28,19 @@ TODO: xxx
 
 ### Vehicle Detection Pipeline
 
+### Feature Extraction
+
+#### Histogram of Oriented Gradients (HOG)
+
+#### Spacial Binning
+
 ### Training the Machine Learning Model
 
-### 
+### Sliding Windows for Identifying Vehicles
 
+## Output
+
+## Conclusions and Future Improvements
 
 ----------------------------------------------------
 # Vehicle Detection
