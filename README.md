@@ -56,6 +56,12 @@ The subset of vehicle and non-vehicle images of the [GTI Vehicle Image Database]
     <img src="./images/non_vehicle_sample.png"/>
 </p>
 
+It is a well-known fact that, hyper-parameter optimization is one of the key steps in building machine learning models and picking the most suitable hyper-parameter helps a lot to get the best predictive performance. Hence, we put a reasonable effort to the best possible hyper-parameter in order to optimize the performance of our models.
+
+In addition to the hyper-parameters of the SVM, feature extraction pipeline also has few parameters. So we optimized those parameters as well. It is worth to mention that, we picked Grid Search with K-Fold cross validation for optimizing hyper-parameters.
+
+
+
 ### Sliding Windows for Identifying Vehicles
 
 ## Output
