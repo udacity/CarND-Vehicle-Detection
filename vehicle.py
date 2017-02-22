@@ -3,6 +3,10 @@ import numpy as np
 from scipy.ndimage.measurements import label
 from skimage.feature import hog
 
+import helper
+from vehicle_detector_constants import FRAME_QUEUE_SIZE
+from vehicle_detector_constants import IMAGE_NORMALIZER
+
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
     # if vis is True, returns both features and a visualization
@@ -61,12 +65,12 @@ def extract_features(images, cspace='RGB', orient=9, spatial_size=(32, 32), hist
         else:
             feature_image = np.copy(image)
 
-        if spatial_feat == True:
+        if spatial_feat:
             spatial_features = bin_spatial(feature_image, size=spatial_size)
             # 4) Append features to list
             file_features.append(spatial_features)
         # 5) Compute histogram features if flag is set
-        if hist_feat == True:
+        if hist_feat:
             hist_features = color_hist(feature_image, nbins=hist_bins)
             # 6) Append features to list
             file_features.append(hist_features)
@@ -158,17 +162,17 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
     else:
         feature_image = np.copy(img)
     # 3) Compute spatial features if flag is set
-    if spatial_feat == True:
+    if spatial_feat:
         spatial_features = bin_spatial(feature_image, size=spatial_size)
         # 4) Append features to list
         img_features.append(spatial_features)
     # 5) Compute histogram features if flag is set
-    if hist_feat == True:
+    if hist_feat:
         hist_features = color_hist(feature_image, nbins=hist_bins)
         # 6) Append features to list
         img_features.append(hist_features)
     # 7) Compute HOG features if flag is set
-    if hog_feat == True:
+    if hog_feat:
         if hog_channel == 'ALL':
             hog_features = []
             for channel in range(feature_image.shape[2]):
@@ -192,79 +196,26 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
         return np.concatenate(img_features)
 
 
-# Define a function you will pass an image
-# and the list of windows to be searched (output of slide_windows())
-def search_windows(img, windows, clf, scaler, color_space='RGB',
-                   spatial_size=(32, 32), hist_bins=32,
-                   orient=9,
-                   pix_per_cell=8, cell_per_block=2,
-                   hog_channel=0, spatial_feat=True,
-                   hist_feat=True, hog_feat=True):
-    # 1) Create an empty list to receive positive detection windows
+def search_windows(img, windows, clf, scaler, color_space,
+                   spatial_size, hist_bins,
+                   orient, pix_per_cell, cell_per_block,
+                   hog_channel, spatial_feat,
+                   hist_feat, hog_feat):
     on_windows = []
-    # 2) Iterate over all windows in the list
     for window in windows:
-        # 3) Extract the test window from original image
         test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
-        # 4) Extract features for that window using single_img_features()
-        # features = single_img_features(test_img, color_space=color_space,
-        #                                spatial_size=spatial_size, hist_bins=hist_bins,
-        #                                orient=orient, pix_per_cell=pix_per_cell,
-        #                                cell_per_block=cell_per_block,
-        #                                hog_channel=hog_channel, spatial_feat=spatial_feat,
-        #                                hist_feat=hist_feat, hog_feat=hog_feat, vis=False)
-        # 5) Scale extracted features to be fed to classifier
-        # plt.imshow(test_img)
+        extracted_features = extract_features([test_img], cspace=color_space, orient=orient, spatial_size=spatial_size,
+                                              hist_bins=hist_bins,
+                                              pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                                              spatial_feat=spatial_feat, hist_feat=hog_feat, hog_feat=hist_feat,
+                                              hog_channel=hog_channel)
 
-        features = extract_features([test_img], cspace=color_space, orient=orient, spatial_size=spatial_size,
-                                    hist_bins=hist_bins,
-                                    pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
-                                    spatial_feat=spatial_feat, hist_feat=hog_feat, hog_feat=hist_feat,
-                                    hog_channel=hog_channel)
-
-        # print(features.shape)
-        test_features = scaler.transform(np.array(features).reshape(1, -1))
-        # 6) Predict using your classifier
+        test_features = scaler.transform(np.array(extracted_features).reshape(1, -1))
         prediction = clf.predict(test_features)
-        # 7) If positive (prediction == 1) then save the window
+
         if prediction == 1:
             on_windows.append(window)
-    # 8) Return windows for positive detections
     return on_windows
-
-
-def add_heat(heatmap, bbox_list):
-    # Iterate through list of bboxes
-    for box in bbox_list:
-        # Add += 1 for all pixels inside each bbox
-        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
-        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
-
-    # Return updated heatmap
-    return heatmap
-
-
-def apply_threshold(heatmap, threshold):
-    # Zero out pixels below the threshold
-    heatmap[heatmap <= threshold] = 0
-    # Return thresholded map
-    return heatmap
-
-
-def draw_labeled_bboxes(img, labels):
-    # Iterate through all detected cars
-    for car_number in range(1, labels[1] + 1):
-        # Find pixels with each car_number label value
-        nonzero = (labels[0] == car_number).nonzero()
-        # Identify x and y values of those pixels
-        nonzeroy = np.array(nonzero[0])
-        nonzerox = np.array(nonzero[1])
-        # Define a bounding box based on min/max x and y
-        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
-        # Draw the box on the image
-        cv2.rectangle(img, bbox[0], bbox[1], (0, 0, 255), 6)
-    # Return the image
-    return img
 
 
 class FrameQueue:
@@ -315,11 +266,11 @@ class VehicleDetector:
         self.scaler = scaler
         self.classifier = classifier
 
-        self.frame_queue = FrameQueue(25) #12
+        self.frame_queue = FrameQueue(FRAME_QUEUE_SIZE)
 
     def detect(self, input_image):
         copy_image = np.copy(input_image)
-        copy_image = copy_image.astype(np.float32) / 255.0
+        copy_image = copy_image.astype(np.float32) / IMAGE_NORMALIZER
 
         slided_windows = slide_window(copy_image, x_start_stop=self.x_start_stop,
                                       y_start_stop=self.y_start_stop,
@@ -333,109 +284,108 @@ class VehicleDetector:
                                     hist_feat=self.hist_feat, hog_feat=self.hog_feat)
 
         heat_map = np.zeros_like(copy_image)
-        heat_map = add_heat(heat_map, on_windows)
+        heat_map = helper.add_heat(heat_map, on_windows)
         self.frame_queue.enqueue(heat_map)
 
         all_frames = self.frame_queue.sum_frames()
-        heat_map = apply_threshold(all_frames, self.heat_threshold)
+        heat_map = helper.apply_threshold(all_frames, self.heat_threshold)
 
         labels = label(heat_map)
 
-        image_with_bb = draw_labeled_bboxes(input_image, labels)
+        image_with_bb = helper.draw_labeled_bboxes(input_image, labels)
         return image_with_bb
 
-
-if __name__ == '__main__':
-    vehicle_files_dir = './data/vehicles/'
-    non_vehicle_files_dir = './data/non-vehicles/'
-    import helper
-    import matplotlib.image as mpimg
-    import matplotlib.image as mpimg
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.svm import LinearSVC
-    from sklearn.model_selection import train_test_split
-
-    from moviepy.editor import VideoFileClip
-
-    vehicle_files = helper.extract_files(vehicle_files_dir)
-    vehicle_images = [mpimg.imread(file) for file in vehicle_files]
-    # vehicle_images = vehicle_images[1000:5000]
-
-    non_vehicle_files = helper.extract_files(non_vehicle_files_dir)
-    non_vehicle_images = [mpimg.imread(file) for file in non_vehicle_files]
-    # non_vehicle_images = non_vehicle_images[1000:5000]
-
-    print('Number of vehicle files: {}'.format(len(vehicle_files)))
-    print('Number of non-vehicle files: {}'.format(len(non_vehicle_files)))
-
-    color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 9  # HOG orientations
-    pix_per_cell = 8  # HOG pixels per cell
-    cell_per_block = 2  # HOG cells per block
-    hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
-    spatial_size = (32, 32)  # Spatial binning dimensions
-    hist_bins = 32  # Number of histogram bins
-    spatial_feat = True  # Spatial features on or off
-    hist_feat = True  # Histogram features on or off
-    hog_feat = True  # HOG features on or off
-
-    vehical_features = extract_features(vehicle_images, color_space, orient, spatial_size, hist_bins,
-                                        pix_per_cell, cell_per_block, spatial_feat, hist_feat, hog_feat,
-                                        hog_channel)
-    print(vehical_features.shape)
-
-    non_vehical_features = extract_features(non_vehicle_images, color_space, orient, spatial_size,
-                                            hist_bins, pix_per_cell, cell_per_block, spatial_feat,
-                                            hist_feat, hog_feat, hog_channel)
-    print(non_vehical_features.shape)
-
-    features = np.vstack((vehical_features, non_vehical_features)).astype(np.float64)
-    print(features.shape)
-
-    scaler = StandardScaler().fit(features)
-
-    X_features = scaler.transform(features)
-
-    y_features = np.hstack((np.ones(len(vehicle_images)), np.zeros(len(non_vehicle_images))))
-
-    X_train, X_test, y_train, y_test = train_test_split(X_features, y_features,
-                                                        test_size=0.05, random_state=1024)
-    svc = LinearSVC().fit(X_train, y_train)
-    accuracy = svc.score(X_test, y_test)
-
-    print('testing :{}'.format(accuracy))
-    print('training :{}'.format(svc.score(X_train, y_train)))
-
-    img_path = './test_images/test4.jpg'
-    image = mpimg.imread(img_path)
-    draw_image = np.copy(image)
-    image = image.astype(np.float32) / 255
-
-    y_start_stop = [350, 650]  # Min and max in y to search in slide_window()
-
-    x_start_stop = [None, None]
-    xy_window = (96, 96)
-    xy_overlap = (0.5, 0.5)
-    vehicle_detector = VehicleDetector(color_space=color_space,
-                                       orient=orient,
-                                       pix_per_cell=pix_per_cell,
-                                       cell_per_block=cell_per_block,
-                                       hog_channel=hog_channel,
-                                       spatial_size=spatial_size,
-                                       hist_bins=hist_bins,
-                                       spatial_feat=spatial_feat,
-                                       hist_feat=hist_feat,
-                                       hog_feat=hog_feat,
-                                       y_start_stop=y_start_stop,
-                                       x_start_stop=x_start_stop,
-                                       xy_window=xy_window,
-                                       xy_overlap=xy_overlap,
-                                       scaler=scaler,
-                                       classifier=svc)
-    output_file = './processed_test_video.mp4'
-    input_file = './test_video.mp4'
-    # line = advanced_lane_finding.Line()
-
-    clip = VideoFileClip(input_file)
-    out_clip = clip.fl_image(vehicle_detector.detect)
-    out_clip.write_videofile(output_file, audio=False)
+# if __name__ == '__main__':
+#     vehicle_files_dir = './data/vehicles/'
+#     non_vehicle_files_dir = './data/non-vehicles/'
+#     import helper
+#     import matplotlib.image as mpimg
+#     import matplotlib.image as mpimg
+#     from sklearn.preprocessing import StandardScaler
+#     from sklearn.svm import LinearSVC
+#     from sklearn.model_selection import train_test_split
+#
+#     from moviepy.editor import VideoFileClip
+#
+#     vehicle_files = helper.extract_files(vehicle_files_dir)
+#     vehicle_images = [mpimg.imread(file) for file in vehicle_files]
+#     # vehicle_images = vehicle_images[1000:5000]
+#
+#     non_vehicle_files = helper.extract_files(non_vehicle_files_dir)
+#     non_vehicle_images = [mpimg.imread(file) for file in non_vehicle_files]
+#     # non_vehicle_images = non_vehicle_images[1000:5000]
+#
+#     print('Number of vehicle files: {}'.format(len(vehicle_files)))
+#     print('Number of non-vehicle files: {}'.format(len(non_vehicle_files)))
+#
+#     color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+#     orient = 9  # HOG orientations
+#     pix_per_cell = 8  # HOG pixels per cell
+#     cell_per_block = 2  # HOG cells per block
+#     hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
+#     spatial_size = (32, 32)  # Spatial binning dimensions
+#     hist_bins = 32  # Number of histogram bins
+#     spatial_feat = True  # Spatial features on or off
+#     hist_feat = True  # Histogram features on or off
+#     hog_feat = True  # HOG features on or off
+#
+#     vehical_features = extract_features(vehicle_images, color_space, orient, spatial_size, hist_bins,
+#                                         pix_per_cell, cell_per_block, spatial_feat, hist_feat, hog_feat,
+#                                         hog_channel)
+#     print(vehical_features.shape)
+#
+#     non_vehical_features = extract_features(non_vehicle_images, color_space, orient, spatial_size,
+#                                             hist_bins, pix_per_cell, cell_per_block, spatial_feat,
+#                                             hist_feat, hog_feat, hog_channel)
+#     print(non_vehical_features.shape)
+#
+#     features = np.vstack((vehical_features, non_vehical_features)).astype(np.float64)
+#     print(features.shape)
+#
+#     scaler = StandardScaler().fit(features)
+#
+#     X_features = scaler.transform(features)
+#
+#     y_features = np.hstack((np.ones(len(vehicle_images)), np.zeros(len(non_vehicle_images))))
+#
+#     X_train, X_test, y_train, y_test = train_test_split(X_features, y_features,
+#                                                         test_size=0.05, random_state=1024)
+#     svc = LinearSVC().fit(X_train, y_train)
+#     accuracy = svc.score(X_test, y_test)
+#
+#     print('testing :{}'.format(accuracy))
+#     print('training :{}'.format(svc.score(X_train, y_train)))
+#
+#     img_path = './test_images/test4.jpg'
+#     image = mpimg.imread(img_path)
+#     draw_image = np.copy(image)
+#     image = image.astype(np.float32) / 255
+#
+#     y_start_stop = [350, 650]  # Min and max in y to search in slide_window()
+#
+#     x_start_stop = [None, None]
+#     xy_window = (96, 96)
+#     xy_overlap = (0.5, 0.5)
+#     vehicle_detector = VehicleDetector(color_space=color_space,
+#                                        orient=orient,
+#                                        pix_per_cell=pix_per_cell,
+#                                        cell_per_block=cell_per_block,
+#                                        hog_channel=hog_channel,
+#                                        spatial_size=spatial_size,
+#                                        hist_bins=hist_bins,
+#                                        spatial_feat=spatial_feat,
+#                                        hist_feat=hist_feat,
+#                                        hog_feat=hog_feat,
+#                                        y_start_stop=y_start_stop,
+#                                        x_start_stop=x_start_stop,
+#                                        xy_window=xy_window,
+#                                        xy_overlap=xy_overlap,
+#                                        scaler=scaler,
+#                                        classifier=svc)
+#     output_file = './processed_test_video.mp4'
+#     input_file = './test_video.mp4'
+#     # line = advanced_lane_finding.Line()
+#
+#     clip = VideoFileClip(input_file)
+#     out_clip = clip.fl_image(vehicle_detector.detect)
+#     out_clip.write_videofile(output_file, audio=False)
