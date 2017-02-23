@@ -77,7 +77,15 @@ If you the vehicle detector which consists of above pipeline stages, you might s
     <img src="./images/multiple_detectors.png">
 </p>
 
-So in this section, we are going to describe the **heat-map** technique which we used to remove both false positives and multiple detectors.
+**Heat-maps**  are used to remove both false positives and multiple detectors. Heat-map work as follows.
+
+1. Initialize heat-map image with dimension equals to the dimension of the input images.
+2. Add "heat" (+=1) for all pixels within windows where a positive detection is reported by your classifier.
+3. The hot parts of the map are where the cars are, and by imposing a threshold, I rejected areas affected by false positives.
+
+The **`add_heat(heatmap, bbox_list)`** and **`apply_threshold(heatmap, threshold)`** methods in the **`helper`** file encapsulate the functionalities described in above three items. Based on the output of the **`apply_threshold(heatmap, threshold)`** methods, we draw bounding boxes around each detected cars.
+
+In addition to **`add_heat(heatmap, bbox_list)`**  and **`apply_threshold(heatmap, threshold)`** we have created a separate class call **`FrameQueue`** in the **`vehicle`** file in order to improve the smoothness of the bounding boxes. It saves last `N` (configurable) number of heat-maps. When it comes to predicting thresholded heat-map, we take the average of last `N` heat-maps and that average heat-map passed to the **`apply_threshold(heatmap, threshold)`** method.
 
 ## Output
 
