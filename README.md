@@ -88,13 +88,81 @@ The **`add_heat(heatmap, bbox_list)`** and **`apply_threshold(heatmap, threshold
 In addition to **`add_heat(heatmap, bbox_list)`**  and **`apply_threshold(heatmap, threshold)`** we have created a separate class call **`FrameQueue`** in the **`vehicle`** file in order to improve the smoothness of the bounding boxes. It saves last `N` (configurable) number of heat-maps. When it comes to predicting thresholded heat-map, we take the average of last `N` heat-maps and that average heat-map passed to the **`apply_threshold(heatmap, threshold)`** method.
 
 ## Output
+In order to easily work with both images and videos, we have created a class (indide the **`vehicle`** file) called **`VehicleDetector`**. It encapsulates methods described above and provides an easy to use interface: **`detect(self, input_image)`**. **`detect`** method accept road images as input and produces annotated images as output.
 
+Following section shows how we can use **`VehicleDetector`** with road images and videos.
+
+```Python
+x_start_stop=[None, None]
+y_start_stop = [400,600]
+xy_window=(96, 85)
+xy_overlap=(0.75, 0.75)
+vehicle_detector = vehicle.VehicleDetector(color_space=color_space,
+                                  orient=orient,
+                                  pix_per_cell=pix_per_cell,
+                                  cell_per_block=cell_per_block,
+                                  hog_channel=hog_channel,
+                                  spatial_size=spatial_size,
+                                  hist_bins=hist_bins,
+                                  spatial_feat=spatial_feat,
+                                  hist_feat=hist_feat,
+                                  hog_feat=hog_feat,
+                                  y_start_stop=y_start_stop,
+                                  x_start_stop=x_start_stop,
+                                  xy_window=xy_window,
+                                  xy_overlap=xy_overlap,
+                                  heat_threshold = 1,
+                                  scaler=scaler,
+                                  classifier=svc)
+
+sample_image_path = './test_images/test6.jpg'
+sample_image = mpimg.imread(sample_image_path)
+sample_output = vehicle_detector.detect(sample_image)
+```
 <p align="center">
     <img src="./images/detection_on_images.png"/>
 </p>
 
+```python
+x_start_stop=[None, None]
+y_start_stop = [400,600]
+xy_window=(96, 85)
+xy_overlap=(0.75, 0.75)
+vehicle_detector = vehicle.VehicleDetector(color_space=color_space,
+                                  orient=orient,
+                                  pix_per_cell=pix_per_cell,
+                                  cell_per_block=cell_per_block,
+                                  hog_channel=hog_channel,
+                                  spatial_size=spatial_size,
+                                  hist_bins=hist_bins,
+                                  spatial_feat=spatial_feat,
+                                  hist_feat=hist_feat,
+                                  hog_feat=hog_feat,
+                                  y_start_stop=y_start_stop,
+                                  x_start_stop=x_start_stop,
+                                  xy_window=xy_window,
+                                  xy_overlap=xy_overlap,
+                                  heat_threshold = 15,
+                                  scaler=scaler,
+                                  classifier=svc)
+
+output_file = './processed_project_video.mp4'
+input_file = './project_video.mp4'
+
+clip = VideoFileClip(input_file)
+out_clip = clip.fl_image(vehicle_detector.detect)
+out_clip.write_videofile(output_file, audio=False)
+```
+<p align="center">
+    <a href="https://www.youtube.com/watch?v=ZNmvFZJRKWA">
+        <img src="https://img.youtube.com/vi/ZNmvFZJRKWA/0.jpg" alt="video output">
+    </a>
+</p>
+
 
 ## Conclusions and Future Improvements
+
+
 
 ## References
 
