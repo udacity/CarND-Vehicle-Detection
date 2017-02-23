@@ -32,6 +32,9 @@ Following figure shows the Vehicle detection pipeline we used for this project. 
 
 Next, we are going to discuss these pipeline stages in detail.  
 
+### Sliding Windows for Identifying Vehicles
+xxx
+
 ### Feature Extraction
 
 The success of traditional machine learning algorithms is mainly depends in the features we used to train that algorithms
@@ -60,11 +63,11 @@ It is a well-known fact that, hyper-parameter optimization is one of the key ste
 
 In addition to the hyper-parameters of the SVM, feature extraction pipeline also has few parameters. So we optimized those parameters as well. It is worth to mention that, we picked Grid Search with K-Fold cross validation for optimizing hyper-parameters.
 
-
-
-### Sliding Windows for Identifying Vehicles
-
 ## Output
+<p align="center">
+    <img src="./images/detection_on_images.png"/>
+</p>
+
 
 ## Conclusions and Future Improvements
 
