@@ -61,9 +61,26 @@ The subset of vehicle and non-vehicle images of the [GTI Vehicle Image Database]
 
 It is a well-known fact that, hyper-parameter optimization is one of the key steps in building machine learning models and picking the most suitable hyper-parameter helps a lot to get the best predictive performance. Hence, we put a reasonable effort to the best possible hyper-parameter in order to optimize the performance of our models.
 
-In addition to the hyper-parameters of the SVM, feature extraction pipeline also has few parameters. So we optimized those parameters as well. It is worth to mention that, we picked Grid Search with K-Fold cross validation for optimizing hyper-parameters.
+We used **Grid Search** hyper-parameter optimization method and following are the optimized hyper-parameter values we manged to estimate for out Linear SVM model.
+
+1. Penalty parameter (C): C: 0.08
+2. Penalty: l2
+3. Loss: hinge
+
+In addition to the hyper-parameters of the Linear SVM, we have few parameters in our vehicle detection system such as `spatial_size`, `pix_per_cell`, and `HOG orientations`. For those parameters, we used best recommended values available in computer vision literature.
+
+### Handling False Positives and Multiple Detectors
+
+If you the vehicle detector which consists of above pipeline stages, you might see multiple bounding boxes. Also, detector sometimes reports some false positive detectors as well. One such example is given below.
+
+<p align="center">
+    <img src="./images/multiple_detectors.png">
+</p>
+
+So in this section, we are going to describe the **heat-map** technique which we used to remove both false positives and multiple detectors.
 
 ## Output
+
 <p align="center">
     <img src="./images/detection_on_images.png"/>
 </p>
