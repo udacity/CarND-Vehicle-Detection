@@ -9,13 +9,37 @@ from vehicle_detector_constants import IMAGE_NORMALIZER
 
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
-    # if vis is True, returns both features and a visualization
+    """
+    This method generates hog features from the input image according to the values of the following parameters
+
+    :param img:
+        The input image
+
+    :param orient:
+
+
+    :param pix_per_cell:
+
+
+    :param cell_per_block:
+
+
+    :param vis:
+
+
+    :param feature_vec:
+
+
+
+    :return:
+        Generated features
+
+    """
     if vis:
         features, hog_image = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell), \
                                   cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=False, \
                                   visualise=True, feature_vector=False)
         return features.ravel(), hog_image
-    # otherwise returns features only
     else:
 
         features = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell), \
@@ -25,6 +49,13 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, featu
 
 
 def bin_spatial(image, size=(32, 32)):
+    """
+    This method calculate and returns spacial bins according to the size of the special bin
+
+    :param image:
+    :param size:
+    :return:
+    """
     color1 = cv2.resize(image[:, :, 0], size).ravel()
     color2 = cv2.resize(image[:, :, 1], size).ravel()
     color3 = cv2.resize(image[:, :, 2], size).ravel()
@@ -32,18 +63,37 @@ def bin_spatial(image, size=(32, 32)):
 
 
 def color_hist(img, nbins=32):
+    """
+
+    :param img:
+    :param nbins:
+    :return:
+    """
     color_1_hist = np.histogram(img[:, :, 0], bins=nbins)
     color_2_hist = np.histogram(img[:, :, 0], bins=nbins)
     color_3_hist = np.histogram(img[:, :, 0], bins=nbins)
     return np.concatenate((color_1_hist[0], color_2_hist[0], color_3_hist[0]))
 
 
-# Define a function to extract features from a list of images
-# Have this function call bin_spatial() and color_hist()
 def extract_features(images, cspace='RGB', orient=9, spatial_size=(32, 32), hist_bins=32,
                      pix_per_cell=8, cell_per_block=2,
                      spatial_feat=True, hist_feat=True, hog_feat=True, hog_channel=0):
-    # Create a list to append feature vectors to
+    """
+    Extract features from a list of images.
+
+    :param images:
+    :param cspace:
+    :param orient:
+    :param spatial_size:
+    :param hist_bins:
+    :param pix_per_cell:
+    :param cell_per_block:
+    :param spatial_feat:
+    :param hist_feat:
+    :param hog_feat:
+    :param hog_channel:
+    :return:
+    """
     features = []
     # Iterate through the list of images
     for image in images:
@@ -95,12 +145,20 @@ def extract_features(images, cspace='RGB', orient=9, spatial_size=(32, 32), hist
     return np.array(features)
 
 
-# Define a function that takes an image,
-# start and stop positions in both x and y,
-# window size (x and y dimensions),
-# and overlap fraction (for both x and y)
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
                  xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
+    """
+    This method takes an image, start and stop positions in both x and y,
+    window size (x and y dimensions) and overlap fraction (for both x and y).
+    It returns the coordinates of all possible sliding windows.
+
+    :param img:
+    :param x_start_stop:
+    :param y_start_stop:
+    :param xy_window:
+    :param xy_overlap:
+    :return:
+    """
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] is None:
         x_start_stop[0] = 0
@@ -138,13 +196,27 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     return window_list
 
 
-# Define a function to extract features from a single image window
-# This function is very similar to extract_features()
-# just for a single image rather than list of images
 def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
                         hist_bins=32, orient=9,
                         pix_per_cell=8, cell_per_block=2, hog_channel=0,
                         spatial_feat=True, hist_feat=True, hog_feat=True, vis=True):
+    """
+    This method generates features from a single image.
+
+    :param img:
+    :param color_space:
+    :param spatial_size:
+    :param hist_bins:
+    :param orient:
+    :param pix_per_cell:
+    :param cell_per_block:
+    :param hog_channel:
+    :param spatial_feat:
+    :param hist_feat:
+    :param hog_feat:
+    :param vis:
+    :return:
+    """
     # 1) Define an empty list to receive features
     img_features = []
     # 2) Apply color conversion if other than 'RGB'
@@ -201,6 +273,24 @@ def search_windows(img, windows, clf, scaler, color_space,
                    orient, pix_per_cell, cell_per_block,
                    hog_channel, spatial_feat,
                    hist_feat, hog_feat):
+    """
+
+    :param img:
+    :param windows:
+    :param clf:
+    :param scaler:
+    :param color_space:
+    :param spatial_size:
+    :param hist_bins:
+    :param orient:
+    :param pix_per_cell:
+    :param cell_per_block:
+    :param hog_channel:
+    :param spatial_feat:
+    :param hist_feat:
+    :param hog_feat:
+    :return:
+    """
     on_windows = []
     for window in windows:
         test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
@@ -219,6 +309,10 @@ def search_windows(img, windows, clf, scaler, color_space,
 
 
 class FrameQueue:
+    """
+    This class is used to maintain a queue of heat-map frames
+    """
+
     def __init__(self, max_frames):
         self.frames = []
         self.max_frames = max_frames
@@ -244,6 +338,12 @@ class FrameQueue:
 
 
 class VehicleDetector:
+    """
+    This is the main class of the project. It encapsulates methods we created for sliding windows, feature generation,
+    machine learning mode, and remove duplicates and false positives. Also, internally, it calls other utility methods
+    for task such as drawing bounding boxes.
+    """
+
     def __init__(self, color_space, orient, pix_per_cell, cell_per_block,
                  hog_channel, spatial_size, hist_bins, spatial_feat,
                  hist_feat, hog_feat, y_start_stop, x_start_stop, xy_window,
@@ -294,98 +394,3 @@ class VehicleDetector:
 
         image_with_bb = helper.draw_labeled_bboxes(input_image, labels)
         return image_with_bb
-
-# if __name__ == '__main__':
-#     vehicle_files_dir = './data/vehicles/'
-#     non_vehicle_files_dir = './data/non-vehicles/'
-#     import helper
-#     import matplotlib.image as mpimg
-#     import matplotlib.image as mpimg
-#     from sklearn.preprocessing import StandardScaler
-#     from sklearn.svm import LinearSVC
-#     from sklearn.model_selection import train_test_split
-#
-#     from moviepy.editor import VideoFileClip
-#
-#     vehicle_files = helper.extract_files(vehicle_files_dir)
-#     vehicle_images = [mpimg.imread(file) for file in vehicle_files]
-#     # vehicle_images = vehicle_images[1000:5000]
-#
-#     non_vehicle_files = helper.extract_files(non_vehicle_files_dir)
-#     non_vehicle_images = [mpimg.imread(file) for file in non_vehicle_files]
-#     # non_vehicle_images = non_vehicle_images[1000:5000]
-#
-#     print('Number of vehicle files: {}'.format(len(vehicle_files)))
-#     print('Number of non-vehicle files: {}'.format(len(non_vehicle_files)))
-#
-#     color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-#     orient = 9  # HOG orientations
-#     pix_per_cell = 8  # HOG pixels per cell
-#     cell_per_block = 2  # HOG cells per block
-#     hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
-#     spatial_size = (32, 32)  # Spatial binning dimensions
-#     hist_bins = 32  # Number of histogram bins
-#     spatial_feat = True  # Spatial features on or off
-#     hist_feat = True  # Histogram features on or off
-#     hog_feat = True  # HOG features on or off
-#
-#     vehical_features = extract_features(vehicle_images, color_space, orient, spatial_size, hist_bins,
-#                                         pix_per_cell, cell_per_block, spatial_feat, hist_feat, hog_feat,
-#                                         hog_channel)
-#     print(vehical_features.shape)
-#
-#     non_vehical_features = extract_features(non_vehicle_images, color_space, orient, spatial_size,
-#                                             hist_bins, pix_per_cell, cell_per_block, spatial_feat,
-#                                             hist_feat, hog_feat, hog_channel)
-#     print(non_vehical_features.shape)
-#
-#     features = np.vstack((vehical_features, non_vehical_features)).astype(np.float64)
-#     print(features.shape)
-#
-#     scaler = StandardScaler().fit(features)
-#
-#     X_features = scaler.transform(features)
-#
-#     y_features = np.hstack((np.ones(len(vehicle_images)), np.zeros(len(non_vehicle_images))))
-#
-#     X_train, X_test, y_train, y_test = train_test_split(X_features, y_features,
-#                                                         test_size=0.05, random_state=1024)
-#     svc = LinearSVC().fit(X_train, y_train)
-#     accuracy = svc.score(X_test, y_test)
-#
-#     print('testing :{}'.format(accuracy))
-#     print('training :{}'.format(svc.score(X_train, y_train)))
-#
-#     img_path = './test_images/test4.jpg'
-#     image = mpimg.imread(img_path)
-#     draw_image = np.copy(image)
-#     image = image.astype(np.float32) / 255
-#
-#     y_start_stop = [350, 650]  # Min and max in y to search in slide_window()
-#
-#     x_start_stop = [None, None]
-#     xy_window = (96, 96)
-#     xy_overlap = (0.5, 0.5)
-#     vehicle_detector = VehicleDetector(color_space=color_space,
-#                                        orient=orient,
-#                                        pix_per_cell=pix_per_cell,
-#                                        cell_per_block=cell_per_block,
-#                                        hog_channel=hog_channel,
-#                                        spatial_size=spatial_size,
-#                                        hist_bins=hist_bins,
-#                                        spatial_feat=spatial_feat,
-#                                        hist_feat=hist_feat,
-#                                        hog_feat=hog_feat,
-#                                        y_start_stop=y_start_stop,
-#                                        x_start_stop=x_start_stop,
-#                                        xy_window=xy_window,
-#                                        xy_overlap=xy_overlap,
-#                                        scaler=scaler,
-#                                        classifier=svc)
-#     output_file = './processed_test_video.mp4'
-#     input_file = './test_video.mp4'
-#     # line = advanced_lane_finding.Line()
-#
-#     clip = VideoFileClip(input_file)
-#     out_clip = clip.fl_image(vehicle_detector.detect)
-#     out_clip.write_videofile(output_file, audio=False)

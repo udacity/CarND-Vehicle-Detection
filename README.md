@@ -184,8 +184,8 @@ out_clip = clip.fl_image(vehicle_detector.detect)
 out_clip.write_videofile(output_file, audio=False)
 ```
 <p align="center">
-    <a href="https://www.youtube.com/watch?v=ZNmvFZJRKWA">
-        <img src="https://img.youtube.com/vi/ZNmvFZJRKWA/0.jpg" alt="video output">
+    <a href="https://www.youtube.com/watch?v=yPeauhM8g6c">
+        <img src="https://img.youtube.com/vi/yPeauhM8g6c/0.jpg" alt="video output">
     </a>
 </p>
 
@@ -197,13 +197,5 @@ In this project we studied on of the key components of autonomous vehicles calle
 Though vehicle detection works well, the key drawback of this system is number of frames processed per second was very low. Hence, it is very difficult it use this for real-time applications. Hence, I would like to propose following enhancements.
 
 1. In order to identify performance bottlenecks of the system I ran a debug session. According to its result, **`hog()`** (of skimage.feature package) method consumes the bulk of the CPU power. Hence, in the future I'm planning to use an alternative HOG calculator.
-2. Recently, new deep learning based method such ash YOLO [] and SSD [] have recorded very good performance on **Detection and Tracking** benchmark datasets. Hence, I'm planning to evaluate those new deep learning based system for vehicle tracking.
+2. Recently, new deep learning based method such ash [YOLO](https://pjreddie.com/darknet/yolo/) and [SSD](https://arxiv.org/abs/1512.02325) have recorded very good performance on **Detection and Tracking** benchmark datasets. Hence, I'm planning to evaluate those new deep learning based system for vehicle tracking.
 3. Additionally, I would like to enhance our vehicle tracking system for detection other objects such as road signs and pedestrians.  
-
-## References
-
-[1]. xxxx
-
-[2]. zzzz
-
-[3]. zzzz
