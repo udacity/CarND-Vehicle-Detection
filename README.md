@@ -33,7 +33,21 @@ Following figure shows the Vehicle detection pipeline we used for this project. 
 Next, we are going to discuss these pipeline stages in detail.  
 
 ### Sliding Windows for Identifying Vehicles
-xxx
+
+Vehicle detection pipeline starts with the sliding window stage. In this stage we convolve a small window an extract image patches. The width and hight of the window and the overlap between two windows are parameters of out sliding window algorithm.
+
+Normally, people use different window sizes and overlaps in order to increase the detection accuracy. In the initial stage of this project I also tried several window sizes, overlaps, and search areas. But, finally I picked following window size, overlap, and search areas which perform on images and videos.
+
+1. `xy_window = (96, 96)`
+2. `xy_overlap = (0.75, 0.75)`
+3. ` y_start_stop = [400, 600]`
+4. `x_start_stop = [None, None]`
+
+Following image shows the locations of the search windows used by our detection system.
+
+<p align="center">
+    <img src="./images/search_windows.png"/>
+</p>
 
 ### Feature Extraction
 
@@ -70,7 +84,7 @@ It is a well-known fact that, hyper-parameter optimization is one of the key ste
 
 We used **Grid Search** hyper-parameter optimization method and following are the optimized hyper-parameter values we manged to estimate for out Linear SVM model.
 
-1. Penalty parameter (C): C: 0.08
+1. Penalty Value C: 0.08
 2. Penalty: l2
 3. Loss: hinge
 
@@ -100,10 +114,6 @@ In order to easily work with both images and videos, we have created a class (in
 Following section shows how we can use **`VehicleDetector`** with road images and videos.
 
 ```Python
-x_start_stop=[None, None]
-y_start_stop = [400,600]
-xy_window=(96, 85)
-xy_overlap=(0.75, 0.75)
 vehicle_detector = vehicle.VehicleDetector(color_space=color_space,
                                   orient=orient,
                                   pix_per_cell=pix_per_cell,
@@ -131,10 +141,6 @@ sample_output = vehicle_detector.detect(sample_image)
 </p>
 
 ```python
-x_start_stop=[None, None]
-y_start_stop = [400,600]
-xy_window=(96, 85)
-xy_overlap=(0.75, 0.75)
 vehicle_detector = vehicle.VehicleDetector(color_space=color_space,
                                   orient=orient,
                                   pix_per_cell=pix_per_cell,
