@@ -8,7 +8,7 @@ from Line import Line
 from utils import Utils
 
 
-class Pipeline:
+class VehicleFinder:
     def __init__(self):
         self.utils = Utils()
 

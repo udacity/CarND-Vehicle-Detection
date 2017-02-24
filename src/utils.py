@@ -350,5 +350,3 @@ class Utils:
         offset = abs(xmidpoint - midpoint) * self.xm_per_pixel
 
         return offset
-
-    def 
