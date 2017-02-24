@@ -2,6 +2,7 @@
 ## Vehicle Detection
 
 ### Overview
+
 The objective of this project is identify and tracking road vehicles using traditional computer vision and machine learning techniques such as histogram of oriented gradients (HOG) and support vector machines (SVM). In the first phase of the project, we high quality trained a vehicle classifier models using SVM. HOG and special binning techniques were used to extract features. Next, using sliding window method, we extracted imaged patches from road images. Those images patches were used to extract features and ran against SVM model. The output of the SVM indicates whether the given patch is a vehicle or not.
 
 Following animation shows the performance of our final model against a road video.
@@ -30,7 +31,11 @@ TODO: xxx
 
 Following figure shows the Vehicle detection pipeline we used for this project. As picture depicted, pipeline starts with the sliding window process. Next, the extracted image patch goes to the feature generation stage. Generated features are used as the input of the machine learning algorithm. For this project, we used Linear Support Vector Machine as our machine learning algorithm. Based on the output of the machine learning model, we added sliding windows to the heat map. Finally, heat map is thresholded to extract vehicle bounding boxes.
 
-Next, we are going to discuss these pipeline stages in detail.  
+<p align="center">
+   <img src="./images/pipeline.png"/>
+</p>
+
+Next, we are going to discuss these pipeline stages in detail.
 
 ### Sliding Windows for Identifying Vehicles
 
@@ -51,9 +56,23 @@ Following image shows the locations of the search windows used by our detection 
 
 ### Feature Extraction
 
-The success of traditional machine learning algorithms is mainly depends in the features we used to train that algorithms
-.
-###### Histogram of Oriented Gradients (HOG)
+The success of traditional machine learning algorithms such as SVM we used for this project mainly depends in the features we used to train that algorithms. For this project I used Following three feature generating methods. The value used for each parameter is also given below.
+
+1. Histogram of Oriented Gradients (HOG)
+   1. `orient = 9`
+   2. `pix_per_cell = 8`
+   3. `cell_per_block = 2`
+   4. `cspace = YCrCb`
+   5. **`get_hog_features()`** method in the **`vehicle`** file.
+2. Spatial Binning
+   1. `nbins=32`
+   2. **`bin_spatial()`** method in the **`vehicle`** file.
+3. Color Histograms
+   1. `color_hist = 32`
+   2. **`color_hist()`** method in the **`vehicle`** file.
+
+Following two figures show the HOG features generated for vehicle and non-vehicle gray scale images.
+
 
 <p align="center">
     <img src="./images/vehicle_hog.png"/>
@@ -62,10 +81,6 @@ The success of traditional machine learning algorithms is mainly depends in the 
 <p align="center">
     <img src="./images/non_vehicle_hog.png"/>
 </p>
-
-###### Spacial Binning
-
-xxxx
 
 ### Training the Machine Learning Model
 When it comes to selecting a machine learning algorithm for vehicle tracking problem, I had two concerns namely: accuracy and speed. So I picked Linear SVM classifier because it provides a reasonable trade off between speed and accuracy.
@@ -89,6 +104,8 @@ We used **Grid Search** hyper-parameter optimization method and following are th
 3. Loss: hinge
 
 In addition to the hyper-parameters of the Linear SVM, we have few parameters in our vehicle detection system such as `spatial_size`, `pix_per_cell`, and `HOG orientations`. For those parameters, we used best recommended values available in computer vision literature.
+
+For more details regarding the training and validating our machine learning model please refer **`Vehicle_Detection.ipynb`** notebook.
 
 ### Handling False Positives and Multiple Detectors
 
