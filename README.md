@@ -40,7 +40,14 @@ xxx
 The success of traditional machine learning algorithms is mainly depends in the features we used to train that algorithms
 .
 ###### Histogram of Oriented Gradients (HOG)
-xxxx
+
+<p align="center">
+    <img src="./images/vehicle_hog.png"/>
+</p>
+
+<p align="center">
+    <img src="./images/non_vehicle_hog.png"/>
+</p>
 
 ###### Spacial Binning
 

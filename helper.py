@@ -36,21 +36,24 @@ def display_random_images(image_files, num_of_images=12, images_per_row=6, main_
     plt.show()
 
 
-def visualize_hog_features(hog_features, images, color_map=None):
+def visualize_hog_features(hog_features, images, color_map=None, suptitle=None):
     num_images = len(images)
-    space = gridspec.GridSpec(num_images // 2 + 1, 2)
+    space = gridspec.GridSpec(num_images, 2)
     space.update(wspace=0.1, hspace=0.1)
-    plt.figure(figsize=(6, 6 * (num_images // 2 + 1)))
+    plt.figure(figsize=(4, 2 * (num_images // 2 + 1)))
 
-    for index in range(0, num_images):
-        axis_1 = plt.subplot(space[index])
-        axis_1.axis('off')
-        axis_1.imshow(images[index], cmap=color_map)
+    for index in range(0, num_images*2):
+        if index % 2 == 0:
+            axis_1 = plt.subplot(space[index])
+            axis_1.axis('off')
+            axis_1.imshow(images[index // 2], cmap=color_map)
+        else:
+            axis_2 = plt.subplot(space[index])
+            axis_2.axis('off')
+            axis_2.imshow(hog_features[index // 2], cmap=color_map)
 
-        axis_1 = plt.subplot(space[index + 1])
-        axis_1.axis('off')
-        axis_1.imshow(hog_features[index], cmap=color_map)
-
+    if suptitle is not None:
+        plt.suptitle(suptitle)
     plt.show()
 
 
@@ -76,6 +79,10 @@ def add_heat(heatmap, bbox_list):
     # Return updated heatmap
     return heatmap
 
+def draw_sliding_windows(image, windows, color=(197, 27, 138), thick=3):
+    for window in windows:
+        cv2.rectangle(image, window[0], window[1], color, thick)
+    return image
 
 def apply_threshold(heatmap, threshold):
     # Zero out pixels below the threshold
