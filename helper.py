@@ -8,6 +8,12 @@ import cv2
 
 
 def extract_files(parent, extension='.png'):
+    """
+
+    :param parent:
+    :param extension:
+    :return:
+    """
     file_container = []
     for root, dirs, files in os.walk(parent):
         for file in files:
@@ -17,6 +23,14 @@ def extract_files(parent, extension='.png'):
 
 
 def display_random_images(image_files, num_of_images=12, images_per_row=6, main_title=None):
+    """
+
+    :param image_files:
+    :param num_of_images:
+    :param images_per_row:
+    :param main_title:
+    :return:
+    """
     random_files = np.random.choice(image_files, num_of_images)
     images = []
     for random_file in random_files:
@@ -37,6 +51,14 @@ def display_random_images(image_files, num_of_images=12, images_per_row=6, main_
 
 
 def visualize_hog_features(hog_features, images, color_map=None, suptitle=None):
+    """
+
+    :param hog_features:
+    :param images:
+    :param color_map:
+    :param suptitle:
+    :return:
+    """
     num_images = len(images)
     space = gridspec.GridSpec(num_images, 2)
     space.update(wspace=0.1, hspace=0.1)
@@ -57,18 +79,6 @@ def visualize_hog_features(hog_features, images, color_map=None, suptitle=None):
     plt.show()
 
 
-# Here is your draw_boxes function from the previous exercise
-def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
-    # Make a copy of the image
-    copy_image = np.copy(img)
-    # Iterate through the bounding boxes
-    for bbox in bboxes:
-        # Draw a rectangle given bbox coordinates
-        cv2.rectangle(copy_image, bbox[0], bbox[1], color, thick)
-    # Return the image copy with boxes drawn
-    return copy_image
-
-
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
     for box in bbox_list:
@@ -79,12 +89,29 @@ def add_heat(heatmap, bbox_list):
     # Return updated heatmap
     return heatmap
 
+
 def draw_sliding_windows(image, windows, color=(197, 27, 138), thick=3):
+    """
+    Draw app possible sliding windows on top of the given image.
+
+    :param image:
+    :param windows:
+    :param color:
+    :param thick:
+    :return:
+    """
     for window in windows:
         cv2.rectangle(image, window[0], window[1], color, thick)
     return image
 
 def apply_threshold(heatmap, threshold):
+    """
+    Simple unitliy function which encapsulates heap-map thresholding algorithm
+
+    :param heatmap:
+    :param threshold:
+    :return:
+    """
     # Zero out pixels below the threshold
     heatmap[heatmap <= threshold] = 0
     # Return thresholded map
@@ -92,6 +119,13 @@ def apply_threshold(heatmap, threshold):
 
 
 def draw_labeled_bboxes(img, labels):
+    """
+    Draw boxes on top of the given image
+
+    :param img:
+    :param labels:
+    :return:
+    """
     # Iterate through all detected cars
     for car_number in range(1, labels[1] + 1):
         # Find pixels with each car_number label value
