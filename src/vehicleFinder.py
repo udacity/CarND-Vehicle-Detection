@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import glob
 import matplotlib.pyplot as plt
+from sklearn.svm import SVC
 
 from Line import Line
 from utils import Utils
@@ -111,8 +112,11 @@ class VehicleFinder:
         print('Using:', self.orient, 'orientations', self.pix_per_cell,
               'pixels per cell and', self.cell_per_block, 'cells per block')
         print('Feature vector length:', len(X_train[0]))
-        # Use a linear SVC
+
+        # Use a linear SVC or linear with probability
         svc = LinearSVC()
+        # svc = SVC(kernel='linear', probability=True)
+
         # Check the training time for the SVC
         t = time.time()
         svc.fit(X_train, y_train)
@@ -121,6 +125,8 @@ class VehicleFinder:
         # Check the score of the SVC
         print('Test Accuracy of SVC = ', round(svc.score(scaled_X_t, y_t), 4))
         print(svc)
+
+        # Save the svc and scaler values so I don't have to retrain everytime I run
         joblib.dump(svc, self.svc_filename)
         joblib.dump(X_scaler, self.x_scaler_filename)
 
@@ -150,26 +156,6 @@ class VehicleFinder:
             image = mpimg.imread(img)
             draw_image = np.copy(image)
 
-            # windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-            #                        xy_window=(96, 96), xy_overlap=(0.5, 0.5))
-            #
-            # hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
-            #                              spatial_size=spatial_size, hist_bins=hist_bins,
-            #                              orient=orient, pix_per_cell=pix_per_cell,
-            #                              cell_per_block=cell_per_block,
-            #                              hog_channel=hog_channel, spatial_feat=spatial_feat,
-            #                              hist_feat=hist_feat, hog_feat=hog_feat)
-            #
-            # window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
-            # ystart = 400
-            # ystop = 656
-            # scale = 1.5
-            # window_img = find_cars(draw_image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell,
-            #                        cell_per_block, spatial_size,
-            #                        hist_bins)
-            #
-            # plt.imshow(window_img)
-            # plt.show()
             scales = [1.25, 1.5, 1.75, 2, 2.25]
             # find_cars_multi_scale(scales)
             ystart = 400
@@ -183,6 +169,7 @@ class VehicleFinder:
             plt.show()
 
     def run_video_pipeline(self):
+        print('Running through video...')
         lost_frame = 0
         # read video in
         video = cv2.VideoCapture('../test_video.mp4')

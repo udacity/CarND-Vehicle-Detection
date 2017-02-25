@@ -3,12 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import cv2
+from scipy.ndimage.measurements import label
+
+import heatMapUtils
 from lesson_functions import *
 
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
-    draw_img = np.copy(img)
     img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
@@ -62,14 +64,20 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             # Scale features and make a prediction
             test_features = X_scaler.transform(
                 np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
-            # test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))
-            test_prediction = svc.predict(test_features)
 
-            if test_prediction == 1:
+            # test_prediction = svc.predict(test_features)
+
+            # For predictions using probability
+            test_prediction = svc.predict_proba(test_features)
+            tp = test_prediction[0]
+
+            if tp[1] > 0.6:
+            # if test_prediction == 1:
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)
-                boxes.append([xbox_left, ytop_draw, win_draw, ystart])
+                boxes.append(((xbox_left, ytop_draw + ystart),
+                             (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
 
     return boxes
 
@@ -82,15 +90,34 @@ def find_cars_multi_scale(img, ystart, ystop, scales, svc, X_scaler, orient, pix
         boxes = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell,
                                cell_per_block, spatial_size,
                                hist_bins)
-        # print('scale is: ' + str(scale))
-        # print(boxes)
-        for box in boxes:
-            if len(box) == 4:
-                xbox_left = box[0]
-                ytop_draw = box[1]
-                win_draw = box[2]
-                ystart = box[3]
-                cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
-                              (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
+        if len(boxes) > 0:
+            all_boxes.append(boxes)
+
+        # # FOR DEBUGGING:
+        # for box in boxes:
+        #     if len(box) == 4:
+        #         xbox_left = box[0]
+        #         ytop_draw = box[1]
+        #         win_draw = box[2]
+        #         ystart = box[3]
+        #         cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
+        #                       (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
+
+
+    if len(all_boxes) >= 1:
+        heat = np.zeros_like(img[:, :, 0]).astype(np.float)
+
+        # Add heat to each box in box list
+        heat = heatMapUtils.add_heat(heat, all_boxes[0])
+
+        # Apply threshold to help remove false positives
+        heat = heatMapUtils.apply_threshold(heat, 1)
+
+        # Visualize the heatmap when displaying
+        heatmap = np.clip(heat, 0, 255)
+
+        # Find final boxes from heatmap using label function
+        labels = label(heatmap)
+        draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(img), labels)
 
     return draw_img
