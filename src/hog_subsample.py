@@ -5,25 +5,6 @@ import pickle
 import cv2
 from lesson_functions import *
 
-dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-# TODO: need to train this svc
-svc = dist_pickle["svc"]
-# Todo: need to find this x scaler
-X_scaler = dist_pickle["scaler"]
-
-# orient = dist_pickle["orient"]
-orient = 9
-# pix_per_cell = dist_pickle["pix_per_cell"]
-pix_per_cell = 8
-# cell_per_block = dist_pickle["cell_per_block"]
-cell_per_block = 2
-# spatial_size = dist_pickle["spatial_size"]
-spatial_size = (32, 32)
-# TODO: need this histogram bins
-hist_bins = dist_pickle["hist_bins"]
-
-img = mpimg.imread('test_image.jpg')
-
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
@@ -56,6 +37,8 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
 
+    boxes = []
+
     for xb in range(nxsteps):
         for yb in range(nysteps):
             ypos = yb * cells_per_step
@@ -86,19 +69,28 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)
+                boxes.append([xbox_left, ytop_draw, win_draw, ystart])
+
+    return boxes
+
+
+def find_cars_multi_scale(img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+    all_boxes = []
+    draw_img = np.copy(img)
+
+    for scale in scales:
+        boxes = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell,
+                               cell_per_block, spatial_size,
+                               hist_bins)
+        # print('scale is: ' + str(scale))
+        # print(boxes)
+        for box in boxes:
+            if len(box) == 4:
+                xbox_left = box[0]
+                ytop_draw = box[1]
+                win_draw = box[2]
+                ystart = box[3]
                 cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
                               (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
 
     return draw_img
-
-
-ystart = 400
-ystop = 656
-scale = 1.5
-
-# TODO: implement this with varying scale sizes to account for smaller vehicles in the distances and larger vehicle close by
-# looks like 1.5 to about 2.5 might be good values, may have to section this off into regions for far away and up close
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-                    hist_bins)
-
-plt.imshow(out_img)
