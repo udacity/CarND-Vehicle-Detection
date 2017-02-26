@@ -64,6 +64,8 @@ def bin_spatial(image, size=(32, 32)):
 
 def color_hist(img, nbins=32):
     """
+    This method calculates color histogram from the input image and returns
+    those histograms.
 
     :param img:
     :param nbins:
