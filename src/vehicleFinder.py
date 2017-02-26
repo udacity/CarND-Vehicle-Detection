@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import glob
 import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
 from Line import Line
@@ -38,6 +39,7 @@ class VehicleFinder:
         self.hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
         self.spatial_size = (16, 16)  # Spatial binning dimensions
         self.hist_bins = 16  # Number of histogram bins
+        self.scales = [1, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45]
 
     def train(self):
 
@@ -68,17 +70,17 @@ class VehicleFinder:
                                            hog_channel=self.hog_channel, spatial_feat=spatial_feat,
                                            hist_feat=hist_feat, hog_feat=hog_feat)
         car_test_features = extract_features(test_cars, color_space=color_space,
-                                        spatial_size=self.spatial_size, hist_bins=self.hist_bins,
-                                        orient=self.orient, pix_per_cell=self.pix_per_cell,
-                                        cell_per_block=self.cell_per_block,
-                                        hog_channel=self.hog_channel, spatial_feat=spatial_feat,
-                                        hist_feat=hist_feat, hog_feat=hog_feat)
+                                             spatial_size=self.spatial_size, hist_bins=self.hist_bins,
+                                             orient=self.orient, pix_per_cell=self.pix_per_cell,
+                                             cell_per_block=self.cell_per_block,
+                                             hog_channel=self.hog_channel, spatial_feat=spatial_feat,
+                                             hist_feat=hist_feat, hog_feat=hog_feat)
         notcar_test_features = extract_features(test_notcars, color_space=color_space,
-                                           spatial_size=self.spatial_size, hist_bins=self.hist_bins,
-                                           orient=self.orient, pix_per_cell=self.pix_per_cell,
-                                           cell_per_block=self.cell_per_block,
-                                           hog_channel=self.hog_channel, spatial_feat=spatial_feat,
-                                           hist_feat=hist_feat, hog_feat=hog_feat)
+                                                spatial_size=self.spatial_size, hist_bins=self.hist_bins,
+                                                orient=self.orient, pix_per_cell=self.pix_per_cell,
+                                                cell_per_block=self.cell_per_block,
+                                                hog_channel=self.hog_channel, spatial_feat=spatial_feat,
+                                                hist_feat=hist_feat, hog_feat=hog_feat)
 
         X = np.vstack((car_features, notcar_features)).astype(np.float64)
         X_t = np.vstack((car_test_features, notcar_test_features)).astype(np.float64)
@@ -114,7 +116,8 @@ class VehicleFinder:
         print('Feature vector length:', len(X_train[0]))
 
         # Use a linear SVC or linear with probability
-        svc = LinearSVC()
+        svc = LinearSVC(C=2.0)
+        # svc = RandomForestClassifier()
         # svc = SVC(kernel='linear', probability=True)
 
         # Check the training time for the SVC
@@ -136,19 +139,8 @@ class VehicleFinder:
         # Load in trained svc and x_scaler
         svc = joblib.load(self.svc_filename)
         X_scaler = joblib.load(self.x_scaler_filename)
-        # Check the prediction time for a single sample
-        t = time.time()
-        ### TODO: Tweak these parameters and see how the results change.
-        color_space = 'HSV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-        spatial_feat = True  # Spatial features on or off
-        hist_feat = True  # Histogram features on or off
-        hog_feat = True  # HOG features on or off
-        y_start_stop = [375, 650]  # Min and max in y to search in slide_window()
-        # Not using this below because i read the png's in using cv2 so they are 0 to 255
-        # Uncomment the following line if you extracted training
-        # data from .png images (scaled 0 to 1 by mpimg) and the
-        # image you are searching is a .jpg (scaled 0 to 255)
-        # image = image.astype(np.float32)/255
+        heatmaps = []
+        heatmap_sum = np.zeros((720,1280)).astype(np.float64)
 
         images = glob.glob('../test_images/test*.jpg')
 
@@ -156,17 +148,40 @@ class VehicleFinder:
             image = mpimg.imread(img)
             draw_image = np.copy(image)
 
-            scales = [1.25, 1.5, 1.75, 2, 2.25]
             # find_cars_multi_scale(scales)
             ystart = 400
             ystop = 656
-            # scale = 1.25
-            window_img = find_cars_multi_scale(draw_image, ystart, ystop, scales, svc, X_scaler, self.orient, self.pix_per_cell,
-                                   self.cell_per_block, self.spatial_size,
-                                   self.hist_bins)
+            all_boxes = find_cars_multi_scale(draw_image, ystart, ystop, self.scales, svc, X_scaler, self.orient,
+                                               self.pix_per_cell,
+                                               self.cell_per_block, self.spatial_size,
+                                               self.hist_bins)
 
-            plt.imshow(window_img)
-            plt.show()
+            if len(all_boxes) >= 1:
+                heat = np.zeros_like(image[:, :, 0]).astype(np.float)
+                # Add heat t    o each box in box list
+                heat = heatMapUtils.add_heat(heat, all_boxes)
+
+                # Apply threshold to help remove false positives
+                heat = heatMapUtils.apply_threshold(heat, 1)
+
+                # Visualize the heatmap when displaying
+                heatmap = np.clip(heat, 0, 255)
+
+                heatmap_sum += heatmap
+                heatmaps.append(heat)
+
+                # subtract off old heat map to keep running sum of last n heatmaps
+                if len(heatmaps) > 5:
+                    old_heatmap = heatmaps.pop(0)
+                    heatmap_sum -= old_heatmap
+                    heatmap_sum = np.clip(heatmap_sum, 0.0, 1000000.0)
+
+                # Find final boxes from heatmap using label function
+                labels = label(heatmap)
+                draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(image), labels)
+
+                plt.imshow(draw_img)
+                plt.show()
 
     def run_video_pipeline(self):
         print('Running through video...')
@@ -181,7 +196,8 @@ class VehicleFinder:
         X_scaler = joblib.load(self.x_scaler_filename)
         ystart = 400
         ystop = 656
-        scales = [1.25, 1.5, 1.75, 2, 2.25]
+        heatmaps = []
+        heatmap_sum = np.zeros((720, 1280)).astype(np.float64)
 
         # while the video is open, process images
         while video.isOpened():
@@ -189,12 +205,36 @@ class VehicleFinder:
             success, image = video.read()
 
             # run the pipeline on the frame
-            result = find_cars_multi_scale(image, ystart, ystop, scales, svc, X_scaler, self.orient, self.pix_per_cell,
-                               self.cell_per_block, self.spatial_size,
-                               self.hist_bins)
+            all_boxes = find_cars_multi_scale(image, ystart, ystop, self.scales, svc, X_scaler, self.orient, self.pix_per_cell,
+                                           self.cell_per_block, self.spatial_size,
+                                           self.hist_bins)
+
+            if len(all_boxes) >= 1:
+                heat = np.zeros_like(image[:, :, 0]).astype(np.float)
+                # Add heat t    o each box in box list
+                heat = heatMapUtils.add_heat(heat, all_boxes)
+
+                # Apply threshold to help remove false positives
+                heat = heatMapUtils.apply_threshold(heat, 1)
+
+                # Visualize the heatmap when displaying
+                heatmap = np.clip(heat, 0, 255)
+
+                heatmap_sum += heatmap
+                heatmaps.append(heat)
+
+                # subtract off old heat map to keep running sum of last n heatmaps
+                if len(heatmaps) > 5:
+                    old_heatmap = heatmaps.pop(0)
+                    heatmap_sum -= old_heatmap
+                    heatmap_sum = np.clip(heatmap_sum, 0.0, 1000000.0)
+
+                # Find final boxes from heatmap using label function
+                labels = label(heatmap_sum)
+                draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(image), labels)
 
             # Write the output
-            out.write(result)
+            out.write(draw_img)
             # show the frames with the lane marked
             # cv2.imshow('frame', result)
 
