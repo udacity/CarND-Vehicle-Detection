@@ -39,7 +39,7 @@ class VehicleFinder:
         self.hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
         self.spatial_size = (16, 16)  # Spatial binning dimensions
         self.hist_bins = 16  # Number of histogram bins
-        self.scales = [1, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45]
+        self.scales = [0.70, 0.80, 0.90, 1, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45]
 
     def train(self):
 
@@ -197,6 +197,7 @@ class VehicleFinder:
         print('Running through video...')
         # read video in
         video = cv2.VideoCapture('../test_video.mp4')
+        # video = cv2.VideoCapture('../project_video.mp4')
         # to output video
         fourcc = cv2.VideoWriter_fourcc(*'MP4V')
         out = cv2.VideoWriter('../output_project_video.mp4', fourcc, 20.0, (1280, 720))
@@ -224,7 +225,7 @@ class VehicleFinder:
                 heat = heatMapUtils.add_heat(heat, all_boxes)
 
                 # Apply threshold to help remove false positives
-                heat = heatMapUtils.apply_threshold(heat, 1)
+                heat = heatMapUtils.apply_threshold(heat, 8)
 
                 # Visualize the heatmap when displaying
                 heatmap = np.clip(heat, 0, 255)
