@@ -89,7 +89,7 @@ class VehicleFinder:
         X_scaler_t = StandardScaler().fit(X_t)
         # Apply the scaler to X
         scaled_X = X_scaler.transform(X)
-        scaled_X_t = X_scaler_t.transform(X_t)
+        scaled_X_t = X_scaler.transform(X_t)
 
         # Define the labels vector
         y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
@@ -116,7 +116,7 @@ class VehicleFinder:
         print('Feature vector length:', len(X_train[0]))
 
         # Use a linear SVC or linear with probability
-        svc = LinearSVC(C=2.0)
+        svc = LinearSVC()
         # svc = RandomForestClassifier()
         # svc = SVC(kernel='linear', probability=True)
 
@@ -155,21 +155,28 @@ class VehicleFinder:
                                                self.pix_per_cell,
                                                self.cell_per_block, self.spatial_size,
                                                self.hist_bins)
-
             if len(all_boxes) >= 1:
                 heat = np.zeros_like(image[:, :, 0]).astype(np.float)
                 # Add heat t    o each box in box list
                 heat = heatMapUtils.add_heat(heat, all_boxes)
-
+                print('after adding heat')
+                # plt.imshow(heat)
+                # plt.show()
                 # Apply threshold to help remove false positives
                 heat = heatMapUtils.apply_threshold(heat, 1)
-
+                print('after applying threshold')
+                # plt.imshow(heat)
+                # plt.show()
                 # Visualize the heatmap when displaying
                 heatmap = np.clip(heat, 0, 255)
-
+                print('visualize heatmap')
+                # plt.imshow(heatmap)
+                # plt.show()
                 heatmap_sum += heatmap
                 heatmaps.append(heat)
-
+                print('append heatmaps')
+                # plt.imshow(heatmap)
+                # plt.show()
                 # subtract off old heat map to keep running sum of last n heatmaps
                 if len(heatmaps) > 5:
                     old_heatmap = heatmaps.pop(0)
@@ -178,6 +185,9 @@ class VehicleFinder:
 
                 # Find final boxes from heatmap using label function
                 labels = label(heatmap)
+                print('lables')
+                # plt.imshow(labels)
+                # plt.imshow()
                 draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(image), labels)
 
                 plt.imshow(draw_img)
@@ -185,7 +195,6 @@ class VehicleFinder:
 
     def run_video_pipeline(self):
         print('Running through video...')
-        lost_frame = 0
         # read video in
         video = cv2.VideoCapture('../test_video.mp4')
         # to output video
@@ -211,7 +220,7 @@ class VehicleFinder:
 
             if len(all_boxes) >= 1:
                 heat = np.zeros_like(image[:, :, 0]).astype(np.float)
-                # Add heat t    o each box in box list
+                # Add heat to each box in box list
                 heat = heatMapUtils.add_heat(heat, all_boxes)
 
                 # Apply threshold to help remove false positives
@@ -232,9 +241,12 @@ class VehicleFinder:
                 # Find final boxes from heatmap using label function
                 labels = label(heatmap_sum)
                 draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(image), labels)
+                # Write the output
+                out.write(draw_img)
+            else:
+                # Write the output
+                out.write(image)
 
-            # Write the output
-            out.write(draw_img)
             # show the frames with the lane marked
             # cv2.imshow('frame', result)
 

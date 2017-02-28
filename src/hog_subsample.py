@@ -11,6 +11,7 @@ from lesson_functions import *
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+    heatmap = np.zeros_like(img[:,:,0])
     img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
@@ -78,7 +79,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 win_draw = np.int(window * scale)
                 boxes.append(((xbox_left, ytop_draw + ystart),
                               (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
-
+                # heatmap[ytop_draw+ystart:ytop_draw+win_draw+ystart, xbox_left:xbox_left+win_draw] +=1
+    # plt.imshow(heatmap)
+    # plt.show()
     return boxes
 
 
@@ -88,15 +91,21 @@ def find_cars_multi_scale(img, ystart, ystop, scales, svc, X_scaler, orient, pix
     draw_img = np.copy(img)
 
     for scale in scales:
+        # print('scale: ' + str(scale))
         boxes = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell,
                           cell_per_block, spatial_size,
                           hist_bins)
         if len(boxes) > 0:
             all_boxes.append(boxes)
-        # # FOR DEBUGGING:
-        # for box in boxes:
-        #     if len(box) == 2:
-        #         cv2.rectangle(draw_img, box[0],
-        #                       box[1], (0, 0, 255), 6)
-
+    #     # FOR DEBUGGING:
+    #     print(len(boxes))
+    #     print(boxes)
+    #     for box in boxes:
+    #         if len(box) == 2:
+    #             cv2.rectangle(draw_img, box[0],
+    #                           box[1], (0, 0, 255), 6)
+    # print(len(all_boxes))
+    # print(all_boxes)
+    # plt.imshow(draw_img)
+    # plt.show()
     return all_boxes
