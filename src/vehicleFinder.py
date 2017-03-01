@@ -39,17 +39,22 @@ class VehicleFinder:
         self.hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
         self.spatial_size = (16, 16)  # Spatial binning dimensions
         self.hist_bins = 16  # Number of histogram bins
-        self.scales = [0.70, 0.80, 0.90, 1, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45]
+        # self.scales = [0.70, 0.80, 0.90, 1, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45]
+        self.scales = [1, 1.25, 1.5, 2, 2.25]
 
     def train(self):
 
         # Read in cars and notcars
         print('Training...')
         cars = glob.glob('../train_images/vehicles/KITTI_extracted/*.png')
-        notcars = glob.glob('../train_images/non-vehicles/GTI/*.png')
+        notcars = glob.glob('../train_images/non-vehicles/Extras/*.png')
+
+        # cars, notcars = shuffle(cars, notcars)
 
         test_cars = glob.glob('../train_images/vehicles/GTI*/*.png')
-        test_notcars = glob.glob('../train_images/non-vehicles/Extras/*.png')
+        test_notcars = glob.glob('../train_images/non-vehicles/GTI/*.png')
+
+        # test_cars, test_notcars = shuffle(test_cars, test_notcars)
 
         ### TODO: Tweak these parameters and see how the results change.
         color_space = 'HSV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -116,9 +121,9 @@ class VehicleFinder:
         print('Feature vector length:', len(X_train[0]))
 
         # Use a linear SVC or linear with probability
-        svc = LinearSVC()
+        # svc = LinearSVC(C=1.2)
         # svc = RandomForestClassifier()
-        # svc = SVC(kernel='linear', probability=True)
+        svc = SVC(kernel='linear', probability=True)
 
         # Check the training time for the SVC
         t = time.time()
@@ -185,7 +190,7 @@ class VehicleFinder:
 
                 # Find final boxes from heatmap using label function
                 labels = label(heatmap)
-                print('lables')
+                print('labels')
                 # plt.imshow(labels)
                 # plt.imshow()
                 draw_img = heatMapUtils.draw_labeled_bboxes(np.copy(image), labels)
@@ -225,7 +230,7 @@ class VehicleFinder:
                 heat = heatMapUtils.add_heat(heat, all_boxes)
 
                 # Apply threshold to help remove false positives
-                heat = heatMapUtils.apply_threshold(heat, 8)
+                heat = heatMapUtils.apply_threshold(heat, 1)
 
                 # Visualize the heatmap when displaying
                 heatmap = np.clip(heat, 0, 255)

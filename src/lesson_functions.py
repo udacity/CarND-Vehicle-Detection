@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
@@ -51,6 +51,7 @@ def bin_spatial(img, size=(32, 32)):
 
 # Define a function to compute color histogram features
 # NEED TO CHANGE bins_range if reading .png files with mpimg!
+# Not changed because I'm reading in with cv2 and it's 0-255
 def color_hist(img, nbins=32, bins_range=(0, 256)):
     # Compute the histogram of the color channels separately
     channel1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
@@ -75,7 +76,10 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
         file_features = []
         # Read in each one by one
         image = cv2.imread(file)
+        # print('image after cv2.imread')
+        # print(image) # these are 0-255
         # apply color conversion if other than 'RGB'
+        # change all below to BGR because that's what a png file gets read in as using cv2
         if color_space != 'RGB':
             if color_space == 'HSV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
