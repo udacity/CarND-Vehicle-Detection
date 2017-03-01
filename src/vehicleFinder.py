@@ -201,8 +201,8 @@ class VehicleFinder:
     def run_video_pipeline(self):
         print('Running through video...')
         # read video in
-        video = cv2.VideoCapture('../test_video.mp4')
-        # video = cv2.VideoCapture('../project_video.mp4')
+        # video = cv2.VideoCapture('../test_video.mp4')
+        video = cv2.VideoCapture('../project_video.mp4')
         # to output video
         fourcc = cv2.VideoWriter_fourcc(*'MP4V')
         out = cv2.VideoWriter('../output_project_video.mp4', fourcc, 20.0, (1280, 720))
