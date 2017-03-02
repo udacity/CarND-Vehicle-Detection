@@ -16,7 +16,7 @@ The goals / steps of this project are the following:
 [image5]: ./examples/figure_1-heat.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/figure_1-1.png
-[video1]: ./project_video.mp4
+[video1]: ./output_project_video.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -100,7 +100,7 @@ Using a linear SVC with probability helped me a lot while my training data set w
 ### Video Implementation
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output_project_video.mp4)
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
