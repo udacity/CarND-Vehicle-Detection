@@ -43,6 +43,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     boxes = []
 
+    # Slide through the window and predict if a car is there
     for xb in range(nxsteps):
         for yb in range(nysteps):
             ypos = yb * cells_per_step
@@ -67,15 +68,16 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             test_features = X_scaler.transform(
                 np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
 
-            # test_prediction = svc.predict(test_features)
+            # Predict if it's a car
+            test_prediction = svc.predict(test_features)
 
-            # For predictions using probability
-            test_prediction = svc.predict_proba(test_features)
-            tp = test_prediction[0]
+            # # For predictions using probability
+            # test_prediction = svc.predict_proba(test_features)
+            # tp = test_prediction[0]
 
-            # print('prob: ' + str(tp[1]))
-            if tp[1] > 0.85:
-            # if test_prediction == 1:
+            # Add box to our list of boxes if we think it's a car
+            # if tp[1] > 0.95:
+            if test_prediction == 1:
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)
