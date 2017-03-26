@@ -1,4 +1,3 @@
-# pylint: disable=I0011,E1101,C0111,C0103,C0301,W0611,R0914,R0902,R0903,R0913,E0401
 import glob
 import time
 
@@ -104,7 +103,7 @@ def search_windows(img, windows, clf, scaler, color_space='RGB',
     return on_windows
 
 
-def main():
+def main2():
     # Read in cars and notcars
     images = glob.glob("data/smaller/**/*.jpeg", recursive=True)
     cars = []
@@ -114,7 +113,7 @@ def main():
             cars.append(image)
         elif 'non-vehicles' in image:
             notcars.append(image)
-    
+
     # Reduce the sample size because
     # The quiz evaluator times out after 13s of CPU time
     sample_size = 500
@@ -199,4 +198,4 @@ def main():
 
     plt.imshow(window_img)
 
-main()
+# main()

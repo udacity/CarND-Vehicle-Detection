@@ -2,6 +2,7 @@
 import matplotlib.image as mpimg
 import numpy as np
 from skimage.feature import hog
+from sklearn.model_selection import train_test_split
 
 import cv2
 
@@ -67,7 +68,8 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     for file in imgs:
         file_features = []
         # Read in each one by one
-        image = mpimg.imread(file)
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
             if color_space == 'HSV':
