@@ -40,26 +40,31 @@ def generate_data():
 
 
 def get_images():
-    cars = glob.glob("data/vehicles/KITTI_extracted/**/*.png", recursive=True)
-    not_cars = glob.glob("data/non-vehicles/Extras/**/*.png", recursive=True)
+    cars = glob.glob("data/vehicles/**/*.png", recursive=True)
+    not_cars = glob.glob("data/non-vehicles/**/*.png", recursive=True)
+
+    # cars = glob.glob("data/vehicles/KITTI_extracted/**/*.png", recursive=True)
+    # not_cars = glob.glob("data/non-vehicles/Extras/**/*.png", recursive=True)
+
     # cars = glob.glob(
     #     "data/smaller/onlyvehicles_smallset/**/*.jpeg", recursive=True)
     # not_cars = glob.glob(
     #     "data/smaller/non-vehicles_smallset/**/*.jpeg", recursive=True)
-    return shuffle(cars)[0:500], shuffle(not_cars)[0:500]
+    # return shuffle(cars)[0:1000], shuffle(not_cars)[0:1000]
+    return shuffle(cars), shuffle(not_cars)
 
 
 def train_classifier():
     pickle_file = 'data/svc.p'
-    # if os.path.exists(pickle_file):
-    #     print("loading pickle file for svc. skipping training", pickle_file)
-    #     obj = pickle.load(open(pickle_file, "rb"))
-    #     return obj['svc'], obj['scaler']
+    if os.path.exists(pickle_file):
+        print("loading pickle file for svc. skipping training", pickle_file)
+        obj = pickle.load(open(pickle_file, "rb"))
+        return obj['svc'], obj['scaler']
 
     t1 = time.time()
     print("finding images")
     cars, not_cars = get_images()
-    print("extracting features")
+    print("extracting features for this many inputs", len(cars) + len(not_cars))
     car_features = lib.extract_features(cars, color_space=color_space,
                                         spatial_size=spatial_size, hist_bins=hist_bins,
                                         orient=orient, pix_per_cell=pix_per_cell,
@@ -90,7 +95,7 @@ def train_classifier():
     t2 = time.time()
     print("Time to extract features", round(t2 - t1, 2))
     # Use a linear SVC
-    svc = LinearSVC()
+    svc = LinearSVC(C=svc_C)
     svc.fit(X_train, y_train)
     t3 = time.time()
     print(round(t3 - t2, 2), 'Seconds to train SVC...')
@@ -105,26 +110,28 @@ def train_classifier():
 def main():
     svc, X_scaler = train_classifier()
     y_start_stop = [400, 700]
-    scale = 1
-    image = lib.read_image_in_colorspace('sample/bbox-example-image.jpg', color_space="YCrCb")
-    draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
+    scale = 1.5
+    test_files = glob.glob("test_images/*.jpg")
+    for file in test_files:
+        image = lib.read_image_in_colorspace(file, color_space="YCrCb")
+        draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
+        t4 = time.time()
+        out_img = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+        t5 = time.time()
 
-    out_img = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+        # windows = searchlib.slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
+        #                                  xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+        # hot_windows = searchlib.search_windows(image, windows, svc, X_scaler, color_space=color_space,
+        #                                        spatial_size=spatial_size, hist_bins=hist_bins,
+        #                                        orient=orient, pix_per_cell=pix_per_cell,
+        #                                        cell_per_block=cell_per_block,
+        #                                        hog_channel=hog_channel, spatial_feat=spatial_feat,
+        #                                        hist_feat=hist_feat, hog_feat=hog_feat)
+        # out_img = searchlib.draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
 
-
-    # windows = searchlib.slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-    #                                  xy_window=(128, 128), xy_overlap=(0.5, 0.5))
-    # hot_windows = searchlib.search_windows(image, windows, svc, X_scaler, color_space=color_space,
-    #                                        spatial_size=spatial_size, hist_bins=hist_bins,
-    #                                        orient=orient, pix_per_cell=pix_per_cell,
-    #                                        cell_per_block=cell_per_block,
-    #                                        hog_channel=hog_channel, spatial_feat=spatial_feat,
-    #                                        hist_feat=hist_feat, hog_feat=hog_feat)
-    # out_img = searchlib.draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
-
-    print("Displaying image.... Press space to exit")
-    cv2.imshow('image', out_img)
-    cv2.waitKey(0)
+        print("Displaying image.... Press space to exit ", round(t5-t4, 2))
+        cv2.imshow('image', out_img)
+        cv2.waitKey(0)
 
 
 color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -137,5 +144,6 @@ hist_bins = 16    # Number of histogram bins
 spatial_feat = True  # Spatial features on or off
 hist_feat = True  # Histogram features on or off
 hog_feat = True  # HOG features on or off
+svc_C = 1.0
 
 main()

@@ -48,7 +48,7 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
     return hist_features
 
 
-def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
+def extract_features(imgs, color_space='YCrCb', spatial_size=(32, 32),
                      hist_bins=32, orient=9,
                      pix_per_cell=8, cell_per_block=2, hog_channel=0,
                      spatial_feat=True, hist_feat=True, hog_feat=True):
