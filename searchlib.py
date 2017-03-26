@@ -34,7 +34,7 @@ def search_windows(img, windows, clf, scaler, color_space='YCrCb',
 
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
 
-    draw_img = cv2.cvtColor(img, cv2.COLOR_YCrCb2BGR)
+    draw_img = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
 
     img_tosearch = img[ystart:ystop, :, :]
     ctrans_tosearch = np.copy(img_tosearch)

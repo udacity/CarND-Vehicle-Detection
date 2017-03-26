@@ -4,3 +4,4 @@ data/
 .DS_Store
 .ropeproject/
 __pycache__/
+*.mp4

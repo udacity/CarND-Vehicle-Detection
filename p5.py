@@ -8,6 +8,7 @@ import pickle
 import time
 
 import numpy as np
+from moviepy.editor import VideoFileClip
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
@@ -107,31 +108,47 @@ def train_classifier():
     return svc, X_scaler
 
 
+def process_frame(image, svc, X_scaler, scale, y_start_stop):
+
+
+    out_img = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+
+    # draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
+    # windows = searchlib.slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
+    #                                  xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+    # hot_windows = searchlib.search_windows(image, windows, svc, X_scaler, color_space=color_space,
+    #                                        spatial_size=spatial_size, hist_bins=hist_bins,
+    #                                        orient=orient, pix_per_cell=pix_per_cell,
+    #                                        cell_per_block=cell_per_block,
+    #                                        hog_channel=hog_channel, spatial_feat=spatial_feat,
+    #                                        hist_feat=hist_feat, hog_feat=hog_feat)
+    # out_img = searchlib.draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
+    return out_img
+
 def main():
     svc, X_scaler = train_classifier()
     y_start_stop = [400, 700]
     scale = 1.5
-    test_files = glob.glob("test_images/*.jpg")
-    for file in test_files:
-        image = lib.read_image_in_colorspace(file, color_space="YCrCb")
-        draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
-        t4 = time.time()
-        out_img = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-        t5 = time.time()
+    # test_files = glob.glob("test_images/*.jpg")
+    # for file in test_files:
+    #     image = lib.read_image_in_colorspace(file, color_space="YCrCb")
 
-        # windows = searchlib.slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-        #                                  xy_window=(128, 128), xy_overlap=(0.5, 0.5))
-        # hot_windows = searchlib.search_windows(image, windows, svc, X_scaler, color_space=color_space,
-        #                                        spatial_size=spatial_size, hist_bins=hist_bins,
-        #                                        orient=orient, pix_per_cell=pix_per_cell,
-        #                                        cell_per_block=cell_per_block,
-        #                                        hog_channel=hog_channel, spatial_feat=spatial_feat,
-        #                                        hist_feat=hist_feat, hog_feat=hog_feat)
-        # out_img = searchlib.draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
+    #     t4 = time.time()
+    #     out_img = process_frame(image, svc, X_scaler, scale, y_start_stop)
+    #     t5 = time.time()
+    #     print("Displaying image.... Press space to exit ", round(t5-t4, 2))
+    #     cv2.imshow('image', out_img)
+    #     cv2.waitKey(0)
 
-        print("Displaying image.... Press space to exit ", round(t5-t4, 2))
-        cv2.imshow('image', out_img)
-        cv2.waitKey(0)
+    test_videos = ['test_video.mp4']
+    #test_videos = ['project.mp4']
+
+    for vid_file in test_videos:
+        clip = VideoFileClip(vid_file)
+        output_clip = clip.fl_image(
+            lambda img: process_frame(cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb), svc, X_scaler, scale, y_start_stop))
+        output_clip.write_videofile(
+            'output_' + vid_file, audio=False, threads=4)
 
 
 color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
