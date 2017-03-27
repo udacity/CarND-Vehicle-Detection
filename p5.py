@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 from moviepy.editor import VideoFileClip
+from scipy.ndimage.measurements import label
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
@@ -17,7 +18,6 @@ from sklearn.utils import shuffle
 import cv2
 import featurelib as lib
 import searchlib as searchlib
-
 
 
 def generate_data():
@@ -90,49 +90,72 @@ def train_classifier():
     return svc, X_scaler
 
 
-def process_frame(image, svc, X_scaler, scale, y_start_stop):
-    bboxes = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+def process_frame(image, svc, X_scaler, scale, y_start_stop, heatmap):
+    bboxes = []
+    # searchlib.find_cars(image, y_start_stop[0]+50, y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
+    # searchlib.find_cars(image, y_start_stop[0], y_start_stop[0]+100, scale/1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
+    # searchlib.find_cars(image, 550, 700, scale * 1.33333, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
+    searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
+    searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale * 1.333333, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
+    searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale * 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, bboxes)
     draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2RGB)
-    return searchlib.draw_boxes(draw_image, bboxes)
+
+    heatmap.add_heat(image, bboxes)
+    #return searchlib.draw_boxes(draw_image, bboxes)
+    return searchlib.draw_labeled_bboxes(draw_image, heatmap.get_labelled_map())
 
 class HeatMap():
-    def __init__(self):
+    def __init__(self, threshold, count_to_keep):
         self.current = None
-        self.average = []
-        self.initialized = False
+        self.history = []
+        self.avg_heatmap = None
+        self.threshold = threshold
+        self.count_to_keep = count_to_keep
 
-    def add_iteration(self, img, bboxes):
-        if self.initialized is False:
-            pass
+    def add_heat(self, image, bbox_list):
+        self.current = np.zeros_like(image[:, :, 0]).astype(np.float)
+        heatmap = self.current
+        for box in bbox_list:
+            # Add += 1 for all pixels inside each bbox
+            # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+            heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 
-    def get_map(self):
-        return self.average
+        self.history.append(heatmap)
+        # keep only the last 5 items
+        self.history = self.history[-self.count_to_keep:]
+        self.avg_heatmap = np.clip(np.sum(self.history, axis=0), 0, 255)
+        self.avg_heatmap[self.avg_heatmap <= self.threshold] = 0
+
+
+    def get_labelled_map(self):
+        return label(self.avg_heatmap)
 
 
 def main():
     svc, X_scaler = train_classifier()
     y_start_stop = [400, 700]
     scale = 1.5
+    heatmap = HeatMap(heatmap_threshold, heatmap_count_to_keep)
 
-    test_files = glob.glob("test_images/*.jpg")
-    for file in test_files:
-        image = lib.read_image_in_colorspace(file, color_space="YCrCb")
+    # test_files = glob.glob("test_images/*.jpg")
+    # for file in test_files:
+    #     image = lib.read_image_in_colorspace(file, color_space="YCrCb")
 
-        t4 = time.time()
-        out_img = process_frame(image, svc, X_scaler, scale, y_start_stop)
-        t5 = time.time()
-        print("Displaying image.... Press space to exit ", round(t5-t4, 2))
-        cv2.imshow('image', cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
-        cv2.waitKey(0)
-    return
+    #     t4 = time.time()
+    #     out_img = process_frame(image, svc, X_scaler, scale, y_start_stop, heatmap)
+    #     t5 = time.time()
+    #     print("Displaying image.... Press space to exit ", round(t5-t4, 2))
+    #     cv2.imshow('image', cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
+    #     cv2.waitKey(0)
+    # return
 
-    test_videos = ['test_video.mp4']
-    #test_videos = ['project_video.mp4']
+    #test_videos = ['test_video.mp4']
+    test_videos = ['project_video.mp4']
 
     for vid_file in test_videos:
         clip = VideoFileClip(vid_file)
         output_clip = clip.fl_image(
-            lambda img: process_frame(cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb), svc, X_scaler, scale, y_start_stop))
+            lambda img: process_frame(cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb), svc, X_scaler, scale, y_start_stop, heatmap))
         output_clip.write_videofile(
             'output_' + vid_file, audio=False, threads=4)
 
@@ -148,5 +171,6 @@ spatial_feat = True  # Spatial features on or off
 hist_feat = True  # Histogram features on or off
 hog_feat = True  # HOG features on or off
 svc_C = 1.0
-
+heatmap_count_to_keep = 8
+heatmap_threshold = np.int(1.5 * heatmap_count_to_keep)
 main()
