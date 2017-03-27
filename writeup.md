@@ -36,30 +36,42 @@ You're reading it!
 I chose to utilize a combination of HOG, spatial binning, and color histogram features.
 The code for capturing these features is contained in the file `featurelib.py` in the method `get_hog_features`, `bin_spatial`, and `color_hist` starting at lines `12`, `32`, and `39` respectively
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+I started by reading in all the `vehicle` and `non-vehicle` images in the `get_images` method on line `34` in `p5.py`. The read image file names for each class (car vs. non-car) were shuffled before being returned. The data set had about 16,000+ images for the categories combined. Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][car-not-car]
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
+The images were converted to `YCrCb` space before being fed to the training classifier. Images were all read using `cv2.imread` to ensure that they were in the `[0,255]` range.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+The parameters for HOG features was as follows
+* `orientations = 9`
+* `pixels_per_cell = (8, 8)`
+* `cells_per_block = 2`
+* `transform_sqrt = True` # for normalization to reduce effects of shadowing & illumination variance
 
+The parameters for spatial binning were
+* `spatial_size = (16, 16)`
 
-![alt text][image2]
+The parameters for color histogram for each channel were
+* `bins = 16`
+* `range = (0, 256)`
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
-
+![alt text][image2]
 I tried various combinations of parameters and...
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+The classifier training code can be found in the `train_classifier` method on line `40` in `p5.py`. The classifier first reads in all the image files for each class. It generates a y-label vector (1 for car, 0 for non-car). For each image, the HOG, spatial binning, and color histogram features are extracted and appended a feature set array. This data is normalied using `StandardScaler` from `sklearn.preprocessing`. The parameters for feature extraction are defined above in section 1.
+
+The data set is then further randomized and split into 80% training and 20% validation set.
+
+I used the `LinearSVC` classifier from `sklearn.svm` with the default parameters. (I did try to change the `C` parameter from `0.01` to `100`, but it didn't yield better results compared to the default of `1`. The network is trained using `svc.fit` and the data is saved to the `data/svc.p` pickle file for quick reuse when predicting labels for images / video.
 
 ### Sliding Window Search
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+The sliding window search is implemented in the `find_cars` method on line `7` in `searchlib.py`
 
 ![alt text][image3]
 
@@ -101,4 +113,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
+
+* Be careful with the color selection. It makes a big difference in how the training is done
+* consistent between how features are extracted on training and then how they're extracted when we're doing actual prediction with the SVM
 
