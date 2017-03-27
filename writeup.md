@@ -13,6 +13,9 @@ The goals / steps of this project are the following:
 [car-not-car]: ./writeup/car-not-car.png
 [sliding_window]: ./writeup/sliding-window-multiscale.png
 [sliding_window2]: ./writeup/sliding-window2.png
+[heatmap]: ./writeup/heatmap.png
+[labeledheatmap]: ./writeup/labeledheatmap.png
+[final_frame]: ./writeup/final_frame.png
 [image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
@@ -98,19 +101,17 @@ Here's a [link to my video result](./output_project_video.mp4)
 
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+In addition to using a heatmap threshold, I added effectively a low pass filter by averaging the heatmap over the last 5 frames. This was to help filter out outliers that intermittently appear in a frame, but don't consistently track through
 
-### Here are six frames and their corresponding heatmaps:
+### Here are four frames and their corresponding heatmaps:
 
-![alt text][image5]
+![alt text][heatmap]
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
+### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all four frames:
+![alt text][labeledheatmap]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
-
+### Here the resulting bounding boxes are drawn onto the 3rd frame in the series:
+![alt text][final_frame]
 
 ---
 
@@ -120,6 +121,14 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
 
-* Be careful with the color selection. It makes a big difference in how the training is done
-* consistent between how features are extracted on training and then how they're extracted when we're doing actual prediction with the SVM
+One of the initial problems I ran into was that training had high accuracy on the test data set, but detection was failing on the input images and window search. Turns out that in copy pasting code from the quizes, I had two methods that were extracting hog features and they were doing things slightly differently. This required cleaninup the code and ensuring that there was a single method to extract features and scale them.
 
+There were also issues in dealing with png images, so I decided to use cv.imread for all image input and would normalize the images to RGB for all further processing so that I could re-use the same code for testing on single images vs video frames
+
+Using a low pass filter to average the result from the past few frames does introduce a bit of a lag. If a vehicle were to appear suddenly in front of the car, there may be a few frames of wait before it's recognized
+
+There could also be issues if a big vehicle suddenly entered the frame wright in front of the car. It may be detected by the sliding window approach since we're not searching a window that's a significant size of the frame.
+
+The pipeline could be sped up by reducing the area that we search for smaller scale sizes that's further down the lane.
+
+The filtering method could be tuned to have a lag of fewer frames so that we can detect sudden vehicles apparing in the frame quicker
