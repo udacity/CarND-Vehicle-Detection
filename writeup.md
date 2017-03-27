@@ -61,12 +61,19 @@ The parameters for color histogram for each channel were
 * `range = (0, 256)`
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
+The hog parameters and color space was selected by looking tweaking parameters that gave the best SVM classifier test score. The lecture notes mentioned that cars had a bias towards saturation, so I tried the `HLS`, `HSV` colorspace. Additional colorspaces like `LUV`, `YUV`, and `YCrCb` were tried.
+
+The best result came from `YCrCb` color space with these HOG parameters
+* `orientations = 9`
+* `pixels_per_cell = (8, 8)`
+* `cells_per_block = 2`
+* `transform_sqrt = True` # for normalization to reduce effects of shadowing & illumination variance
+
 ![alt text][image2]
-I tried various combinations of parameters and...
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-The classifier training code can be found in the `train_classifier` method on line `40` in `p5.py`. The classifier first reads in all the image files for each class. It generates a y-label vector (1 for car, 0 for non-car). For each image, the HOG, spatial binning, and color histogram features are extracted and appended a feature set array. This data is normalied using `StandardScaler` from `sklearn.preprocessing`. The parameters for feature extraction are defined above in section 1.
+The classifier training code can be found in the `train_classifier` method on line `40` in `p5.py`. The classifier first reads in all the image files for each class. It generates a y-label vector (1 for car, 0 for non-car). For each image, the HOG, spatial binning, and color histogram features are extracted and appended a feature set array. This data is normalized using `StandardScaler` from `sklearn.preprocessing`. The parameters for feature extraction are defined above in section 1.
 
 The data set is then further randomized and split into 80% training and 20% validation set.
 
@@ -78,7 +85,7 @@ I used the `LinearSVC` classifier from `sklearn.svm` with the default parameters
 
 The sliding window search is implemented in the `find_cars` method on line `7` in `searchlib.py`. The window overlap chosen was 75 percent. Scales of 1.33, 1, 2 were searched. The values were selected by trial and error to show good matching of cars in the test images.
 
-The y-range of searching was narrowed from 400-700 pixels. This skips searching the sky and trees
+The y-range of searching was narrowed from 400-700 pixels. This skips searching the sky and trees. The additional optimization was from the course notes that collects the hog features once on the image and then selects different regions from the hog features per window without recomputing the hog features every time.
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
@@ -132,3 +139,5 @@ There could also be issues if a big vehicle suddenly entered the frame wright in
 The pipeline could be sped up by reducing the area that we search for smaller scale sizes that's further down the lane.
 
 The filtering method could be tuned to have a lag of fewer frames so that we can detect sudden vehicles apparing in the frame quicker
+
+There is also an issue of false positives still showing up near the bridge. I didn't have the time to fix those (since even filtering didn't remove them. they were consistent vehicle detections), but I would capture frames from the video that are problematic and tune the classifier so that it worked well with those frames. Maybe even train with the larger udacity data set to get more training samples
