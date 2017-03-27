@@ -19,15 +19,6 @@ import featurelib as lib
 import searchlib as searchlib
 
 
-"""
-Steps to completion
-0. Read in the test set of images. make sure set is randomized and split into test/validation set
-1. Train a classifier using features that you've selected
-2. Validate on the test set
-3. Implement sliding window / heatmap approach on a single image
-4. Add video implementation
-"""
-
 
 def generate_data():
     vehicle_images = glob.glob("data/vehicles/**/*.png", recursive=True)
@@ -43,15 +34,6 @@ def generate_data():
 def get_images():
     cars = glob.glob("data/vehicles/**/*.png", recursive=True)
     not_cars = glob.glob("data/non-vehicles/**/*.png", recursive=True)
-
-    # cars = glob.glob("data/vehicles/KITTI_extracted/**/*.png", recursive=True)
-    # not_cars = glob.glob("data/non-vehicles/Extras/**/*.png", recursive=True)
-
-    # cars = glob.glob(
-    #     "data/smaller/onlyvehicles_smallset/**/*.jpeg", recursive=True)
-    # not_cars = glob.glob(
-    #     "data/smaller/non-vehicles_smallset/**/*.jpeg", recursive=True)
-    # return shuffle(cars)[0:1000], shuffle(not_cars)[0:1000]
     return shuffle(cars), shuffle(not_cars)
 
 
@@ -109,26 +91,28 @@ def train_classifier():
 
 
 def process_frame(image, svc, X_scaler, scale, y_start_stop):
+    bboxes = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2RGB)
+    return searchlib.draw_boxes(draw_image, bboxes)
 
+class HeatMap():
+    def __init__(self):
+        self.current = None
+        self.average = []
+        self.initialized = False
 
-    out_img = searchlib.find_cars(image, y_start_stop[0], y_start_stop[1], scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    def add_iteration(self, img, bboxes):
+        if self.initialized is False:
+            pass
 
-    # draw_image = cv2.cvtColor(image, cv2.COLOR_YCrCb2RGB)
-    # windows = searchlib.slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-    #                                  xy_window=(64, 64), xy_overlap=(0.5, 0.5))
-    # hot_windows = searchlib.search_windows(image, windows, svc, X_scaler, color_space=color_space,
-    #                                        spatial_size=spatial_size, hist_bins=hist_bins,
-    #                                        orient=orient, pix_per_cell=pix_per_cell,
-    #                                        cell_per_block=cell_per_block,
-    #                                        hog_channel=hog_channel, spatial_feat=spatial_feat,
-    #                                        hist_feat=hist_feat, hog_feat=hog_feat)
-    # out_img = searchlib.draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
-    return out_img
+    def get_map(self):
+        return self.average
+
 
 def main():
     svc, X_scaler = train_classifier()
     y_start_stop = [400, 700]
-    scale = 1.25
+    scale = 1.5
 
     test_files = glob.glob("test_images/*.jpg")
     for file in test_files:
