@@ -129,26 +129,26 @@ def main():
     svc, X_scaler = train_classifier()
     y_start_stop = [400, 700]
     scale = 1.5
-    # test_files = glob.glob("test_images/*.jpg")
-    # for file in test_files:
-    #     image = lib.read_image_in_colorspace(file, color_space="YCrCb")
+    test_files = glob.glob("test_images/*.jpg")
+    for file in test_files:
+        image = lib.read_image_in_colorspace(file, color_space="YCrCb")
 
-    #     t4 = time.time()
-    #     out_img = process_frame(image, svc, X_scaler, scale, y_start_stop)
-    #     t5 = time.time()
-    #     print("Displaying image.... Press space to exit ", round(t5-t4, 2))
-    #     cv2.imshow('image', out_img)
-    #     cv2.waitKey(0)
+        t4 = time.time()
+        out_img = process_frame(image, svc, X_scaler, scale, y_start_stop)
+        t5 = time.time()
+        print("Displaying image.... Press space to exit ", round(t5-t4, 2))
+        cv2.imshow('image', cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
+        cv2.waitKey(0)
 
-    test_videos = ['test_video.mp4']
-    #test_videos = ['project.mp4']
+    # test_videos = ['test_video.mp4']
+    # #test_videos = ['project.mp4']
 
-    for vid_file in test_videos:
-        clip = VideoFileClip(vid_file)
-        output_clip = clip.fl_image(
-            lambda img: process_frame(cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb), svc, X_scaler, scale, y_start_stop))
-        output_clip.write_videofile(
-            'output_' + vid_file, audio=False, threads=4)
+    # for vid_file in test_videos:
+    #     clip = VideoFileClip(vid_file)
+    #     output_clip = clip.fl_image(
+    #         lambda img: process_frame(cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb), svc, X_scaler, scale, y_start_stop))
+    #     output_clip.write_videofile(
+    #         'output_' + vid_file, audio=False, threads=4)
 
 
 color_space = 'YCrCb'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
