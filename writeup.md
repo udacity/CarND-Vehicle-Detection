@@ -11,6 +11,7 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [car-not-car]: ./writeup/car-not-car.png
+[sliding_window]: ./writeup/sliding-window-multiscale.png
 [image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
@@ -71,9 +72,13 @@ I used the `LinearSVC` classifier from `sklearn.svm` with the default parameters
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-The sliding window search is implemented in the `find_cars` method on line `7` in `searchlib.py`
+The sliding window search is implemented in the `find_cars` method on line `7` in `searchlib.py`. The window overlap chosen was 75 percent. Scales of 1.33, 1, 2 were searched. The values were selected by trial and error to show good matching of cars in the test images.
 
-![alt text][image3]
+The y-range of searching was narrowed from 400-700 pixels. This skips searching the sky and trees
+
+The sample below shows
+
+![alt text][sliding_window]
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
