@@ -1,0 +1,7 @@
+.ipynb_checkpoints/
+data/
+.vscode/tags
+.DS_Store
+.ropeproject/
+__pycache__/
+*.mp4
