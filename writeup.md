@@ -12,6 +12,7 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [car-not-car]: ./writeup/car-not-car.png
 [sliding_window]: ./writeup/sliding-window-multiscale.png
+[sliding_window2]: ./writeup/sliding-window2.png
 [image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
@@ -76,15 +77,15 @@ The sliding window search is implemented in the `find_cars` method on line `7` i
 
 The y-range of searching was narrowed from 400-700 pixels. This skips searching the sky and trees
 
-The sample below shows
-
-![alt text][sliding_window]
-
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+Ultimately I search on 3 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a good overall result
 
-![alt text][image4]
+Here is a test image showing the raw bounding boxes when running my pipline
+There were some false positives in the images, but they were eliminated by using a heatmap approach over multiple frames
+
+![alt text][sliding_window]
+![alt text][sliding_window2]
 ---
 
 ### Video Implementation
