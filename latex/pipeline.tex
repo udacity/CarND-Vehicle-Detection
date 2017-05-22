@@ -1,0 +1,35 @@
+\documentclass[border=10pt,varwidth]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,shapes.multipart, positioning}
+
+\begin{document}
+
+\begin{tikzpicture}
+    \tikzset{
+        node/.style = {rectangle, draw=magenta,  fill=magenta!10, thin, rounded corners},
+        line/.style = {draw=magenta, thin, -latex},
+        output/.style = {circle, draw=magenta,  fill=magenta!10, thin},
+    }
+    
+    \node[node](input){\scriptsize Input: Image or Video};
+    
+    \node[node](camera)[below = 0.4cm of input]{\scriptsize Sliding Window Generator};
+    
+    \node[node](shear)[below = 0.4cm of camera]{\scriptsize Feature Extractor};
+    
+    \node[node](crop)[below = 0.4cm of shear]{\scriptsize Machine Learning Model};
+    
+    \node[node](flip)[below = 0.4cm of crop]{\scriptsize Remove False Positives and Multiple Detectors};        
+    
+    \node[node](resize)[below = 0.4cm of flip]{\scriptsize Output: Image or Video with Bounding Boxes Around Vehicles};
+    
+    \path [line] (input) -- (camera);
+    \path [line] (camera) -- (shear);
+    \path [line] (shear) -- (crop);
+    \path [line] (crop) -- (flip);
+    \path [line] (flip) -- (resize);
+    
+
+\end{tikzpicture}
+
+\end{document}
