@@ -62,12 +62,15 @@ class CarDetector:
                     hog = np.ravel(hog_feature[hog_y:hog_y+num_blocks_per_window, hog_x:hog_x+num_blocks_per_window])
                     features.append(hog)
 
-                # extract sub images and color features (XXX)
+                # extract sub images and color features 
                 img_x = hog_x * self.classifier.hog_pixels_per_cell
                 img_y = hog_y * self.classifier.hog_pixels_per_cell
 
+                color_img = cv2.resize(feature_img[img_y:img_y+window_size, img_x:img_x+window_size], (64,64))
+                features.extend(self.classifier.extract_color_features(color_img))
+
                 # scale features
-                X_norm = self.classifier.scaler.transform(np.ravel(features).reshape(1, -1))
+                X_norm = self.classifier.scaler.transform(np.concatenate(features).reshape(1, -1))
 
                 # make a prediction
                 pred = self.classifier.classifier_predict(X_norm)
@@ -114,6 +117,7 @@ class CarDetector:
         self.clear_detections()
         self.find_car_rects(img, 1)
         self.find_car_rects(img, 2)
+        self.find_car_rects(img, 4)
 
         self.generate_heatmap()
         self.process_heatmaps()
@@ -122,7 +126,7 @@ class CarDetector:
         draw_img = np.copy(img)
 
         for rect in self.detected_rects:
-            cv2.rectangle(draw_img, (rect[0], rect[1]), (rect[2], rect[3]), (255, 0, 0), 2)
+            cv2.rectangle(draw_img, (rect[0], rect[1]), (rect[2], rect[3]), (0, 0, 255), 2)
 
         return draw_img
 

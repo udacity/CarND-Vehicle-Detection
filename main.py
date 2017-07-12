@@ -21,12 +21,14 @@ def process_video(filename, detector, camera):
 
         # apply camera distortion correction
         corrected = camera.undistort(frame)
+        corrected = cv2.resize(corrected, (640, 360))
 
         # run car detection pipeline
         detector.run(corrected)
 
         # draw rectangles around cars
         result = detector.draw_car_rects(corrected)
+        #result = detector.draw_detected_rects(result)
 
         # debug output
         if DEBUG_VISUALIZE:
@@ -53,14 +55,15 @@ def main():
     
     # initialize car classifier and detector
     clf = CarClassifier.restore('classifier_svc.pkl')
-    detector = CarDetector(clf, heat_threshold=20)
+    detector = CarDetector(clf, heat_threshold=3, num_heat_frames=5)
 
     # debug visualization
     if DEBUG_VISUALIZE:
         cv2.namedWindow(DEBUG_WINDOW)
 
     # process video
-    process_video("test_video.mp4", detector, camera)
+    #process_video("test_video.mp4", detector, camera)
+    process_video("project_video.mp4", detector, camera)
 
     cv2.destroyAllWindows()
 

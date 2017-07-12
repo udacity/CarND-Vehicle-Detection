@@ -46,7 +46,7 @@ class TrainClassifier:
             features.extend(self.classifier.extract_color_features(feature_img))
 
             # store features
-            self.features[type].append(np.ravel(features))
+            self.features[type].append(np.concatenate(features))
 
     def create_train_test_sets(self):
         # stack the features arrays together in a numpy array
