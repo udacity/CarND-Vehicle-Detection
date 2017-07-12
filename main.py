@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 
 from car_classifier import CarClassifier
 from car_detector import CarDetector
@@ -19,9 +20,10 @@ def process_video(filename, detector, camera):
         if not ret_ok:
             break
 
+        t1 = time.time()
+
         # apply camera distortion correction
         corrected = camera.undistort(frame)
-        corrected = cv2.resize(corrected, (640, 360))
 
         # run car detection pipeline
         detector.run(corrected)
@@ -29,6 +31,10 @@ def process_video(filename, detector, camera):
         # draw rectangles around cars
         result = detector.draw_car_rects(corrected)
         #result = detector.draw_detected_rects(result)
+
+        # print duration of frame
+        t_delta = int((time.time() - t1) * 1000)
+        cv2.putText(result, "{} ms - {:.3f} fps".format(t_delta, 1000/t_delta), (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0,255,255), 2)
 
         # debug output
         if DEBUG_VISUALIZE:
@@ -42,8 +48,6 @@ def process_video(filename, detector, camera):
                 break
             elif key == ord(' '):   # spacebar
                 delay = 0 if delay == 1 else 1
-
-
 
 
 def main():
@@ -62,8 +66,8 @@ def main():
         cv2.namedWindow(DEBUG_WINDOW)
 
     # process video
-    #process_video("test_video.mp4", detector, camera)
-    process_video("project_video.mp4", detector, camera)
+    process_video("test_video.mp4", detector, camera)
+    #process_video("project_video.mp4", detector, camera)
 
     cv2.destroyAllWindows()
 
