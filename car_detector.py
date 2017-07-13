@@ -139,3 +139,23 @@ class CarDetector:
             cv2.rectangle(draw_img, (rect[0], rect[1]), (rect[2], rect[3]), (255, 0, 0), 2)
 
         return draw_img
+
+    def output_detection_windows(self, img, x_bounds, y_bounds, scale):
+        region_w = int((x_bounds[1] - x_bounds[0]) / scale)
+        region_h = int((y_bounds[1] - y_bounds[0]) / scale)
+
+        num_x_blocks = (region_w // self.classifier.hog_pixels_per_cell) + 1
+        num_y_blocks = (region_h // self.classifier.hog_pixels_per_cell) + 1
+        window_size  = 64           # XXX move to classifier
+        num_blocks_per_window = (window_size // self.classifier.hog_pixels_per_cell) - self.classifier.hog_cells_per_block + 1
+        cells_per_step = 2          
+        num_x_steps  = (num_x_blocks - num_blocks_per_window) // cells_per_step
+        num_y_steps  = (num_y_blocks - num_blocks_per_window) // cells_per_step
+
+        for x_block in range(num_x_steps):
+            for y_block in range(num_y_steps):
+                x = np.int(x_block * cells_per_step * self.classifier.hog_pixels_per_cell * scale) + x_bounds[0]
+                y = np.int(y_block * cells_per_step * self.classifier.hog_pixels_per_cell * scale) + y_bounds[0]
+                s = np.int(window_size * scale)
+
+                yield (x, y), (x+s, y+s)

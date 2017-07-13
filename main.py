@@ -59,6 +59,36 @@ def process_video(filename, detector, camera):
 
     video_out.release()
 
+def debug_output_search_windows(filename, detector, camera):
+    src_img = camera.undistort(cv2.imread(filename))
+    video_out = cv2.VideoWriter('output_images/windows.avi', cv2.VideoWriter_fourcc(*'DIB '), 5.0, (1280,720))
+
+    iterations =[
+        {'scale':1,   'y':(400,624), 'x':(0, src_img.shape[1])},
+        {'scale':1.5, 'y':(384,672), 'x':(32, src_img.shape[1])},
+        {'scale':2,   'y':(400,656), 'x':(0, src_img.shape[1])},
+        {'scale':3,   'y':(384,672), 'x':(32, src_img.shape[1])}
+    ]
+
+    for settings in iterations:
+        frame = np.copy(src_img)
+
+        title = "scale = {}, y_range = {} - {}, x_range = {} - {}".format(settings["scale"], settings["y"][0], settings["y"][0], settings["x"][0], settings["x"][1])
+        cv2.putText(frame, title, (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 255), 2)
+        cv2.line(frame, (0, settings["y"][0]), (frame.shape[1], settings["y"][0]), (0, 0, 255), 2)
+        cv2.line(frame, (0, settings["y"][1]), (frame.shape[1], settings["y"][1]), (0, 0, 255), 2)
+
+        for rect in detector.output_detection_windows(src_img, settings["x"], settings["y"], settings["scale"]):
+            cv2.rectangle(frame, rect[0], rect[1], (0, 255, 0), 2)
+            video_out.write(frame)
+            cv2.rectangle(frame, rect[0], rect[1], (255, 0, 0), 2)
+
+        for idx in range(5):
+            video_out.write(frame)
+    
+    video_out.release()
+
+
 def main():
     # initialize camera (for distortion correction)
     camera = Camera('camera_udacity')
