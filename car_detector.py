@@ -117,7 +117,9 @@ class CarDetector:
         self.clear_detections()
         self.find_car_rects(img, 1)
         self.find_car_rects(img, 2)
+        self.find_car_rects(img, 3)
         self.find_car_rects(img, 4)
+        self.find_car_rects(img, 5)
 
         self.generate_heatmap()
         self.process_heatmaps()
