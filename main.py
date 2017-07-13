@@ -11,11 +11,14 @@ DEBUG_WINDOW = 'output'
 
 def process_video(filename, detector, camera):
     delay = 0
+    frame_idx = 0
 
     video_src = cv2.VideoCapture(filename)
+    video_out = cv2.VideoWriter('output_images/output.avi', cv2.VideoWriter_fourcc(*'DIB '), 25.0, (1280,720))
 
     while video_src.isOpened():
         ret_ok, frame = video_src.read()
+        frame_idx = frame_idx + 1
 
         if not ret_ok:
             break
@@ -35,11 +38,15 @@ def process_video(filename, detector, camera):
         # print duration of frame
         t_delta = int((time.time() - t1) * 1000)
         cv2.putText(result, "{} ms - {:.3f} fps".format(t_delta, 1000/t_delta), (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0,255,255), 2)
+        print('Frame {} : {} ms'.format(frame_idx, t_delta))
 
         # debug output
         if DEBUG_VISUALIZE:
             cv2.imshow(DEBUG_WINDOW, result)
             #cv2.imshow(DEBUG_WINDOW, detector.heatmap.astype(np.uint8))
+
+        # video output 
+        video_out.write(result)
 
         # input when debug-mode is activated
         if DEBUG_VISUALIZE:
@@ -49,6 +56,7 @@ def process_video(filename, detector, camera):
             elif key == ord(' '):   # spacebar
                 delay = 0 if delay == 1 else 1
 
+    video_out.release()
 
 def main():
     # initialize camera (for distortion correction)
