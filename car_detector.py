@@ -6,6 +6,12 @@ from scipy.ndimage.measurements import label
 
 from car_classifier import CarClassifier
 
+class DetectedRect:
+    def __init__(self, min_c, max_c, weight):
+        self.min_c = min_c
+        self.max_c = max_c
+        self.weight = weight
+
 class CarDetector:
     def __init__(self, classifier, num_heat_frames=5, heat_threshold=10):
         self.classifier = classifier
@@ -69,20 +75,20 @@ class CarDetector:
                 X_norm = self.classifier.scaler.transform(np.concatenate(features).reshape(1, -1))
 
                 # make a prediction
-                pred = self.classifier.classifier_predict(X_norm)
+                pred = self.classifier.classifier_decision_function(X_norm)
 
                 # save the rectange if we think it's a car
-                if pred == 1:
+                if pred > 0:
                     rect_x = np.int(img_x * scale) + x_bounds[0]
                     rect_y = np.int(img_y * scale) + y_bounds[0]
                     rect_s = np.int(window_size * scale)
-                    self.detected_rects.append((rect_x, rect_y, rect_x + rect_s, rect_y + rect_s))
+                    self.detected_rects.append(DetectedRect((rect_x, rect_y), (rect_x + rect_s, rect_y + rect_s), pred))
 
     def generate_heatmap(self):
-        heatmap = np.zeros((720, 1280), dtype=np.uint32)
+        heatmap = np.zeros((720, 1280), dtype=np.float32)
 
         for rect in self.detected_rects:
-            heatmap[rect[1]:rect[3], rect[0]:rect[2]] += 1
+            heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += rect.weight
         
         self.heatmaps.append(heatmap)
 
@@ -124,7 +130,7 @@ class CarDetector:
         draw_img = np.copy(img)
 
         for rect in self.detected_rects:
-            cv2.rectangle(draw_img, (rect[0], rect[1]), (rect[2], rect[3]), (0, 0, 255), 2)
+            cv2.rectangle(draw_img, rect.min_c, rect.max_c, (0, 0, 255), 2)
 
         return draw_img
 

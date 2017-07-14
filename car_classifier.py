@@ -77,6 +77,9 @@ class CarClassifier:
     def classifier_predict(self, X):
         return self.svc.predict(X)
 
+    def classifier_decision_function(self, X):
+        return self.svc.decision_function(X)
+
     def save(self, filename):
         dump = {
             'hog_orientations': self.hog_orientations,
