@@ -6,6 +6,8 @@ import os.path
 from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import LinearSVC
 
 from car_classifier import CarClassifier
 
@@ -68,12 +70,24 @@ class TrainClassifier:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X_norm, y, test_size=0.2, random_state=random_state)
 
     def train_classifier(self):
+        # create the classifier
+        svc = LinearSVC()
+
+        # optimize C parameter with a grid search
+        parameters = {'C' : range(1, 20)}
+        optimizer = GridSearchCV(svc, parameters, verbose=2)
+
         # fit the classifier to the training dataset
-        self.classifier.classifier_train(self.X_train, self.y_train)
+        optimizer.fit(self.X_train, self.y_train)
+
+        print(optimizer.best_params_)
 
         # print the accuracy of the classifier
-        score = self.classifier.classifier_accuracy(self.X_test, self.y_test)
+        score = optimizer.score(self.X_test, self.y_test)
         print("Classifier accuracy = {:.4f}".format(score))
+
+        # store the best estimator
+        self.classifier.svc = optimizer.best_estimator_
 
 if __name__ == '__main__':
     clf = CarClassifier()

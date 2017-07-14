@@ -74,13 +74,6 @@ class CarClassifier:
     def scaler_apply(self, data):
         return self.scaler.transform(data)
 
-    def classifier_train(self, X, y):
-        self.svc = LinearSVC()
-        self.svc.fit(X, y)
-    
-    def classifier_accuracy(self, X, y):
-        return self.svc.score(X, y)
-
     def classifier_predict(self, X):
         return self.svc.predict(X)
 
