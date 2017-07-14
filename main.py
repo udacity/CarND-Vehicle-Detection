@@ -32,19 +32,25 @@ def process_video(filename, detector, camera):
         detector.run(corrected)
 
         # draw rectangles around cars
-        result = corrected
-        result = detector.draw_detected_rects(result)
-        result = detector.draw_car_rects(result)
+        # result = detector.draw_detected_rects(result)
+        result = detector.draw_car_rects(corrected)
 
         # print duration of frame
         t_delta = int((time.time() - t1) * 1000)
         cv2.putText(result, "{} ms - {:.3f} fps".format(t_delta, 1000/t_delta), (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0,255,255), 2)
         print('Frame {} : {} ms'.format(frame_idx, t_delta))
 
+        # integrate the heatmap
+        if DEBUG_VISUALIZE:
+            heatmap = cv2.resize(detector.heatmap.astype(np.uint8), (320, 180)) 
+            heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_HOT)
+
+            result[:180,1280-320:] = heatmap
+
         # debug output
         if DEBUG_VISUALIZE:
             cv2.imshow(DEBUG_WINDOW, result)
-            #cv2.imshow(DEBUG_WINDOW, detector.heatmap.astype(np.uint8))
+            #cv2.imshow(DEBUG_WINDOW, heatmap)
 
         # video output 
         video_out.write(result)
