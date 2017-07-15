@@ -19,6 +19,7 @@ class CarDetector:
         self.detected_rects = []
         self.heatmaps = deque(maxlen=num_heat_frames)
         self.heatmap = None
+        self.heatmap_raw = None
         self.heat_threshold = heat_threshold
         self.car_rects = []
 
@@ -94,9 +95,10 @@ class CarDetector:
 
     def process_heatmaps(self):
         # sum the heatmaps
-        self.heatmap = np.sum(np.array(self.heatmaps), axis=0, dtype=np.uint32)
+        self.heatmap_raw = np.sum(np.array(self.heatmaps), axis=0, dtype=np.uint32)
 
         # apply threshold
+        self.heatmap = np.copy(self.heatmap_raw)
         self.heatmap[self.heatmap <= self.heat_threshold] = 0 
 
         # extract labels
@@ -120,8 +122,10 @@ class CarDetector:
 
         self.find_car_rects(img, (32, img_w), (384, 672), 3)
         self.find_car_rects(img, ( 0, img_w), (400, 656), 2)
-        self.find_car_rects(img, (32, img_w), (384, 672), 1.5)
-        self.find_car_rects(img, ( 0, img_w), (400, 624), 1)
+        self.find_car_rects(img, (32, img_w), (384, 576), 1.5)
+        #self.find_car_rects(img, ( 0, img_w), (368, 560), 1.5)
+        self.find_car_rects(img, (400, img_w), (400, 496), 1)
+
 
         self.generate_heatmap()
         self.process_heatmaps()

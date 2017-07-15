@@ -9,7 +9,7 @@ from camera import Camera
 DEBUG_VISUALIZE = True
 DEBUG_WINDOW = 'output'
 
-def process_video(filename, detector, camera):
+def process_video(filename, detector, camera, start_frame=0):
     delay = 0
     frame_idx = 0
 
@@ -22,6 +22,9 @@ def process_video(filename, detector, camera):
 
         if not ret_ok:
             break
+
+        if frame_idx < start_frame:
+            continue
 
         t1 = time.time()
 
@@ -42,10 +45,24 @@ def process_video(filename, detector, camera):
 
         # integrate the heatmap
         if DEBUG_VISUALIZE:
-            heatmap = cv2.resize(detector.heatmap.astype(np.uint8), (320, 180)) 
+            frame   = cv2.resize(result, (640,360))
+
+            heatmap = cv2.resize(detector.heatmap.astype(np.uint8), (640, 360)) 
             heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_HOT)
 
-            result[:180,1280-320:] = heatmap
+            heatraw = cv2.resize(detector.heatmap_raw.astype(np.uint8), (640,360))
+            heatraw = cv2.applyColorMap(heatraw, cv2.COLORMAP_HOT)
+
+            info = np.zeros((360,640,3))
+
+            for idx, r in enumerate(detector.car_rects):
+                car_heat = detector.heatmap_raw[r[1]:r[3],r[0]:r[2]]
+                cv2.putText(info, "car {}: min heat = {}, max heat = {}".format(idx, np.min(car_heat), np.max(car_heat)), (20, 30 + (idx * 22)), cv2.FONT_HERSHEY_PLAIN, 1.5, (0,255,255), 2)
+
+            result[:360,:640] = frame
+            result[:360:,640:] = heatmap
+            result[360:,:640] = info 
+            result[360:,640:] = heatraw
 
         # debug output
         if DEBUG_VISUALIZE:
@@ -62,6 +79,8 @@ def process_video(filename, detector, camera):
                 break
             elif key == ord(' '):   # spacebar
                 delay = 0 if delay == 1 else 1
+            elif key == ord('s'):
+                cv2.imwrite('output_images/captured.jpg', corrected)
 
     video_out.release()
 
@@ -70,16 +89,17 @@ def debug_output_search_windows(filename, detector, camera):
     video_out = cv2.VideoWriter('output_images/windows.avi', cv2.VideoWriter_fourcc(*'DIB '), 5.0, (1280,720))
 
     iterations =[
-        {'scale':1,   'y':(400,624), 'x':(0, src_img.shape[1])},
-        {'scale':1.5, 'y':(384,672), 'x':(32, src_img.shape[1])},
+        {'scale':1,   'y':(400,496), 'x':(0, src_img.shape[1])},
+        {'scale':1.5, 'y':(384,576), 'x':(32, src_img.shape[1])},
         {'scale':2,   'y':(400,656), 'x':(0, src_img.shape[1])},
+        {'scale':2,   'y':(384,640), 'x':(0, src_img.shape[1])},
         {'scale':3,   'y':(384,672), 'x':(32, src_img.shape[1])}
     ]
 
     for settings in iterations:
         frame = np.copy(src_img)
 
-        title = "scale = {}, y_range = {} - {}, x_range = {} - {}".format(settings["scale"], settings["y"][0], settings["y"][0], settings["x"][0], settings["x"][1])
+        title = "scale = {}, y_range = {} - {}, x_range = {} - {}".format(settings["scale"], settings["y"][0], settings["y"][1], settings["x"][0], settings["x"][1])
         cv2.putText(frame, title, (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 255), 2)
         cv2.line(frame, (0, settings["y"][0]), (frame.shape[1], settings["y"][0]), (0, 0, 255), 2)
         cv2.line(frame, (0, settings["y"][1]), (frame.shape[1], settings["y"][1]), (0, 0, 255), 2)
@@ -104,7 +124,7 @@ def main():
     
     # initialize car classifier and detector
     clf = CarClassifier.restore('classifier_svc.pkl')
-    detector = CarDetector(clf, heat_threshold=10, num_heat_frames=10)
+    detector = CarDetector(clf, heat_threshold=5, num_heat_frames=5)
 
     # debug visualization
     if DEBUG_VISUALIZE:
@@ -112,7 +132,9 @@ def main():
 
     # process video
     #process_video("test_video.mp4", detector, camera)
-    process_video("project_video.mp4", detector, camera)
+    process_video("project_video.mp4", detector, camera, 500)
+    #debug_output_search_windows("test_images/test1.jpg", detector, camera)
+    #debug_output_search_windows("output_images/captured.jpg", detector, camera)
 
     cv2.destroyAllWindows()
 
