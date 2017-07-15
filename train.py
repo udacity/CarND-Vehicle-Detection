@@ -74,13 +74,13 @@ class TrainClassifier:
         svc = LinearSVC()
 
         # optimize C parameter with a grid search
-        parameters = {'C' : range(1, 20)}
-        optimizer = GridSearchCV(svc, parameters, verbose=2)
+        parameters = {'C' : range(1, 10)}
+        optimizer = GridSearchCV(svc, parameters, verbose=1, n_jobs=3)
 
         # fit the classifier to the training dataset
         optimizer.fit(self.X_train, self.y_train)
 
-        print(optimizer.best_params_)
+        print("Best params = {}".format(optimizer.best_params_))
 
         # print the accuracy of the classifier
         score = optimizer.score(self.X_test, self.y_test)
