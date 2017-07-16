@@ -85,6 +85,34 @@ class CarDetector:
                     rect_s = np.int(window_size * scale)
                     self.detected_rects.append(DetectedRect((rect_x, rect_y), (rect_x + rect_s, rect_y + rect_s), pred))
 
+    def find_car_rects_sw(self, img, x_bounds, y_bounds, window_size):
+
+        feature_img = self.classifier.prepare_img(img)
+
+        for w in self.sliding_windows(x_bounds, y_bounds, 64, 0.5):
+            # extract image
+            sub_img = cv2.resize(feature_img[w[0][1]:w[1][1],w[0][0]:w[1][0]], (64,64))
+
+            # extract features
+            features = []
+
+            # -- hog
+            features.extend(self.classifier.extract_hog_features(sub_img))
+
+            # -- image
+            features.extend(self.classifier.extract_color_features(sub_img))
+
+            # scale features
+            X_norm = self.classifier.scaler.transform(np.concatenate(features).reshape(1, -1))
+
+            # make a prediction
+            pred = self.classifier.classifier_decision_function(X_norm)
+
+            # save the rectange if we think it's a car
+            if pred > 0:
+                self.detected_rects.append(DetectedRect(w[0], w[1], pred))
+
+
     def generate_heatmap(self):
         heatmap = np.zeros((720, 1280), dtype=np.float32)
 
@@ -123,9 +151,13 @@ class CarDetector:
         self.find_car_rects(img, (32, img_w), (384, 672), 3)
         self.find_car_rects(img, ( 0, img_w), (400, 656), 2)
         self.find_car_rects(img, (32, img_w), (384, 576), 1.5)
-        #self.find_car_rects(img, ( 0, img_w), (368, 560), 1.5)
         self.find_car_rects(img, (400, img_w), (400, 496), 1)
 
+        #self.find_car_rects(img, (400, img_w), (400, 496), 64)
+        #self.find_car_rects(img, ( 32, img_w), (384, 576), 96)
+        #self.find_car_rects(img, (  0, img_w), (400, 656), 128)
+        #self.find_car_rects(img, ( 32, img_w), (384, 672), 196)
+        #self.find_car_rects(img, (  0, img_w), (400, 656), 256)
 
         self.generate_heatmap()
         self.process_heatmaps()
@@ -165,4 +197,21 @@ class CarDetector:
                 s = np.int(window_size * scale)
 
                 yield (x, y), (x+s, y+s)
+
+    def sliding_windows(self, x_bounds, y_bounds, window_size, overlap):
+        region_w = int(x_bounds[1] - x_bounds[0])
+        region_h = int(y_bounds[1] - y_bounds[0])
+
+        pixels_per_step = int(window_size * (1.0 - overlap))
+
+        num_x_windows = 1 + ((region_w - window_size) // pixels_per_step)
+        num_y_windows = 1 + ((region_h - window_size) // pixels_per_step)
+
+        for x_window in range(num_x_windows):
+            for y_window in range(num_y_windows):
+                x = (x_window * pixels_per_step) + x_bounds[0]
+                y = (y_window * pixels_per_step) + y_bounds[0]
+                yield (x, y), (x+window_size, y+window_size)
+
+
 
