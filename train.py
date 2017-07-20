@@ -6,8 +6,7 @@ import os.path
 from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-from sklearn.svm import LinearSVC
+from sklearn.utils import shuffle
 
 from car_classifier import CarClassifier
 
@@ -17,12 +16,14 @@ CAR = 1
 class TrainClassifier: 
     def __init__(self, classifier):
         self.filenames = [[], []]
-        self.features  = [[], []]
 
         self.X_train = None
         self.y_train = None
         self.X_test = None
         self.y_test = None
+
+        self.train_gen = None
+        self.test_gen = None
 
         self.classifier = classifier
 
@@ -30,64 +31,49 @@ class TrainClassifier:
         for filename in glob.glob(os.path.join(dir, '**', '*.png'), recursive=True):
             self.filenames[type].append(filename)
 
-    def extract_features(self, type):
-        for filename in tqdm(self.filenames[type]):
-            # load image
-            img = cv2.imread(filename)
+    def batch_generator(self, X, y, batch_size=64):
+        n_samples = len(X)
 
-            # prepare image
-            feature_img = self.classifier.prepare_img(img)
+        X_batch = np.zeros((batch_size, 64, 64, 3), dtype=np.uint8)
+        y_batch = np.zeros((batch_size, 2), dtype=np.int32)
 
-            # extract features
-            features = []
+        while True:
+            X, y = shuffle(X, y)
 
-            # -- hog features 
-            features.extend(self.classifier.extract_hog_features(feature_img))
-
-            # -- color features
-            features.extend(self.classifier.extract_color_features(feature_img))
-
-            # store features
-            self.features[type].append(np.concatenate(features))
+            for batch_i in range(0, n_samples, batch_size):
+                n = min(batch_size, n_samples - batch_i)
+                for idx in range(0, n):
+                    # load image
+                    X_batch[idx] = cv2.imread(X[batch_i+idx])
+                    y_batch[idx] = y[batch_i+idx]
+                yield (X_batch[0:n], y_batch[0:n])
 
     def create_train_test_sets(self):
-        # stack the features arrays together in a numpy array
-        X = np.vstack((self.features[CAR], self.features[NOT_CAR])).astype(np.float64)                        
-
-        # normalize the features    
-        self.classifier.scaler_initialize(X)
-        X_norm = self.classifier.scaler_apply(X)
+        # stack the filename arrays together in a numpy array
+        #X = np.vstack((self.filenames[CAR], self.filenames[NOT_CAR]))
+        X = np.array(self.filenames[CAR] + self.filenames[NOT_CAR])
 
         # create the labels array
-        y = np.hstack((
-            np.ones(len(self.features[CAR])), 
-            np.zeros(len(self.features[NOT_CAR]))
+        n1 = (len(self.filenames[CAR]), 1)
+        n2 = (len(self.filenames[NOT_CAR]), 1)
+
+        y = np.vstack((
+            np.hstack((np.ones(n1), np.zeros(n1))),
+            np.hstack((np.zeros(n2), np.ones(n2)))
             ))
 
         # randomize and split the data into training and test datasets
         random_state = np.random.randint(0, 100)
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X_norm, y, test_size=0.2, random_state=random_state)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+
+        self.train_gen = self.batch_generator(self.X_train, self.y_train)
+        self.test_gen = self.batch_generator(self.X_test, self.y_test)
 
     def train_classifier(self):
-        # create the classifier
-        svc = LinearSVC()
+        self.classifier.create_model('classifier.h5')
+        self.classifier.train(self.train_gen, len(self.X_train), self.test_gen, len(self.X_test), 50)
 
-        # optimize C parameter with a grid search
-        parameters = {'C' : range(1, 10)}
-        optimizer = GridSearchCV(svc, parameters, verbose=1, n_jobs=3)
-
-        # fit the classifier to the training dataset
-        optimizer.fit(self.X_train, self.y_train)
-
-        print("Best params = {}".format(optimizer.best_params_))
-
-        # print the accuracy of the classifier
-        score = optimizer.score(self.X_test, self.y_test)
-        print("Classifier accuracy = {:.4f}".format(score))
-
-        # store the best estimator
-        self.classifier.svc = optimizer.best_estimator_
 
 if __name__ == '__main__':
     clf = CarClassifier()
@@ -98,10 +84,6 @@ if __name__ == '__main__':
     tc.load_images(os.path.join('data', 'non-vehicles'), NOT_CAR)
     print('done')
 
-    print('Extracting features ...')
-    tc.extract_features(CAR)
-    tc.extract_features(NOT_CAR)
-
     print('Preparing data sets ...', end='')
     tc.create_train_test_sets()
     print('done')
@@ -109,5 +91,5 @@ if __name__ == '__main__':
     print('Training the classifier ...')
     tc.train_classifier()
 
-    print('Saving the classifier')
-    clf.save('classifier_svc.pkl')
+    #print('Saving the classifier')
+    #clf.save('classifier.h5')

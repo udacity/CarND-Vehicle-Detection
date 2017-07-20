@@ -42,7 +42,7 @@ def export_images(img_dict, base_dir, car_dir, notcar_dir):
 
         # extract car images
         for r in record['car']:
-            if ((r[1][0]-r[0][0])/(r[1][1] - r[0][1])) > 0.95:          # mostly square
+            if (r[1][1]-r[0][1] > 0) and ((r[1][0]-r[0][0])/(r[1][1] - r[0][1])) > 0.95:          # mostly square
                 car_seq = car_seq + 1
                 num_non_cars = num_non_cars + 1
                 extract_image(img, os.path.join(car_dir, 'car_{:0>4}.png'.format(car_seq)), r)
@@ -137,7 +137,7 @@ def process_autti():
 
 def main():
     random.seed()
-    #process_crowdai()
+    process_crowdai()
     process_autti()
 
 if __name__ == '__main__':

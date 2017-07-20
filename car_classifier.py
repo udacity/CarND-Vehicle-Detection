@@ -1,105 +1,58 @@
 import numpy as np
 import cv2
 
-from sklearn.svm import LinearSVC
-from sklearn.preprocessing import StandardScaler
-from skimage.feature import hog
-from sklearn.externals import joblib
+from keras.layers import Flatten, Dense, Conv2D, MaxPooling2D, Dropout, Lambda
+from keras.models import Sequential, load_model
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 class CarClassifier:
-    def __init__(self, hog_orientations = 9, hog_pixels_per_cell = 16, hog_cells_per_block = 2, spatial_size=16, num_bins=16):
-        self.hog_orientations = hog_orientations
-        self.hog_pixels_per_cell = hog_pixels_per_cell
-        self.hog_cells_per_block = hog_cells_per_block
-        self.spatial_size = spatial_size
-        self.num_bins = num_bins
+    def __init__(self):
+        self.model = None
+        self.keras_callbacks = None
 
-        self.svc    = None     
-        self.scaler = None
+    def create_model(self, filename, input_shape=(64,64,3), num_classes = 2):
+        self.model = Sequential()
+        self.model.add(Lambda(lambda x : (x / 255.0) - 0.5, name='Normalize', input_shape=input_shape))
+        self.model.add(Conv2D(3, 1, 1, border_mode='same', name='ColorConversion'))
+        self.model.add(Conv2D(64, 3, 3, border_mode='same', activation='relu', name='Conv1a'))
+        self.model.add(MaxPooling2D((2, 2), strides=(2, 2), name="MaxPool1"))
+        self.model.add(Conv2D(128, 3, 3, border_mode='same', activation='relu', name='Conv2a'))
+        self.model.add(MaxPooling2D((2, 2), strides=(2, 2), name="MaxPool2"))
+        self.model.add(Conv2D(256, 3, 3, border_mode='same', activation='relu', name='Conv3a'))
+        self.model.add(MaxPooling2D((2, 2), strides=(2, 2), name="MaxPool3"))
+        self.model.add(Dropout(0.2, name='Dropout'))
+        self.model.add(Flatten(name='Flatten'))
+        self.model.add(Dense(4096, activation='relu', name='FC1'))
+        self.model.add(Dense(1024, activation='relu', name='FC2'))
+        self.model.add(Dense(num_classes, activation='softmax', name='FC3'))
+
+        self.model.compile( loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        self.keras_callbacks = [
+            EarlyStopping(monitor='val_loss', patience=2, verbose=1),
+            ModelCheckpoint(filename, monitor='val_acc', save_best_only=True)]
 
     def prepare_img (self, img):
         # prepare the image to be classified (e.g color space conversion, image transformations)
-        return cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+        return img
+        #return cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
 
-    def extract_hog_features(self, img, feature_vector=True):
-        channels = []
-        img_h, img_w, img_d = img.shape
-        block_size = (self.hog_cells_per_block * self.hog_pixels_per_cell, self.hog_cells_per_block * self.hog_pixels_per_cell)
-        block_stride = (self.hog_pixels_per_cell, self.hog_pixels_per_cell)
-        cell_size = (self.hog_pixels_per_cell, self.hog_pixels_per_cell)
-        n_cells = (img_h // self.hog_pixels_per_cell - 1, img_w // self.hog_pixels_per_cell - 1)
+    def train(self, train_generator, train_samples, val_generator, val_samples, epochs):
+        self.model.fit_generator(train_generator, samples_per_epoch=train_samples,
+                                 validation_data=val_generator,nb_val_samples=val_samples,
+                                 nb_epoch=epochs,
+                                 callbacks=self.keras_callbacks)
 
-        hog = cv2.HOGDescriptor(block_size, block_size, block_stride, cell_size, self.hog_orientations)
-
-        for channel in range(img_d):
-            features = hog.compute(img)
-            features = features.reshape(n_cells[0], n_cells[1], self.hog_cells_per_block, self.hog_cells_per_block, self.hog_orientations)
-
-            if feature_vector:
-                channels.append(np.ravel(features))
-            else:
-                channels.append(features)
-        
-        return channels
-    
-    def extract_hog_features_sklearn(self, img, feature_vector=True):
-        features = []
-
-        for channel in range(img.shape[2]):
-            features.append(hog(img[:,:,channel], 
-                                orientations=self.hog_orientations, 
-                                pixels_per_cell=(self.hog_pixels_per_cell, self.hog_pixels_per_cell),
-                                cells_per_block=(self.hog_cells_per_block, self.hog_cells_per_block), 
-                                block_norm='L1-sqrt',
-                                transform_sqrt=True, visualise=False, feature_vector=feature_vector))
-        
-        return features
-
-    def extract_color_features(self, img):
-        features = []
-
-        # spatial binning
-        features.append(cv2.resize(img, (self.spatial_size, self.spatial_size)).ravel())
-
-        # color histogram
-        for channel in range(img.shape[2]):
-            # features.append(np.histogram(img[:,:,channel], bins=self.num_bins, range=(0,256))[0])
-            features.append(cv2.calcHist([img], [channel], None, [self.num_bins], [0, 256]).ravel())
-
-        return features
-
-    def scaler_initialize(self, data):
-        self.scaler = StandardScaler().fit(data)
-
-    def scaler_apply(self, data):
-        return self.scaler.transform(data)
-
-    def classifier_predict(self, X):
-        return self.svc.predict(X)
-
-    def classifier_decision_function(self, X):
-        return self.svc.decision_function(X)
+    def predict(self, imgs):
+        pred = self.model.predict(np.asarray(imgs))
+        return np.argmax(pred, axis=1)
 
     def save(self, filename):
-        dump = {
-            'hog_orientations': self.hog_orientations,
-            'hog_pixels_per_cell' : self.hog_pixels_per_cell,
-            'hog_cells_per_block' : self.hog_cells_per_block,
-            'spatial_size' : self.spatial_size,
-            'num_bins' : self.num_bins,
-            'svc' : self.svc,
-            'scaler' : self.scaler
-        }
-
-        joblib.dump(dump, filename)
+        self.model.save(filename)
 
     @staticmethod
     def restore(filename):
-        dump = joblib.load(filename)
-
-        clf = CarClassifier(dump['hog_orientations'], dump['hog_pixels_per_cell'], dump['hog_cells_per_block'], 
-                            dump['spatial_size'], dump['num_bins'])
-        clf.svc = dump['svc']
-        clf.scaler = dump['scaler']
+        clf = CarClassifier()
+        clf.model = load_model(filename)
 
         return clf
