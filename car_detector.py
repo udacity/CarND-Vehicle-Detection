@@ -29,74 +29,18 @@ class CarDetector:
     def clear_heatmaps(self):
         self.heatmaps.clear()
 
-    def find_car_rects(self, img, x_bounds, y_bounds, scale):
-        # copy the region of interest
-        img_region = img[y_bounds[0]:y_bounds[1],x_bounds[0]:x_bounds[1]]
-        region_h, region_w, channels = img_region.shape
-
-        # optionally resize the img
-        if scale != 1:
-            img_region = cv2.resize(img_region, (0,0), fx=1/scale, fy=1/scale)
-            region_h, region_w, channels = img_region.shape
-
-        # define blocks and steps based on the settings of the classifier
-        num_x_blocks = (region_w // self.classifier.hog_pixels_per_cell) + 1 # - self.classifier.hog_cells_per_block + 1
-        num_y_blocks = (region_h // self.classifier.hog_pixels_per_cell) + 1 # - self.classifier.hog_cells_per_block + 1
-        window_size  = 64           # XXX move to classifier
-        num_blocks_per_window = (window_size // self.classifier.hog_pixels_per_cell) - self.classifier.hog_cells_per_block + 1
-        cells_per_step = 2          
-        num_x_steps  = (num_x_blocks - num_blocks_per_window) // cells_per_step
-        num_y_steps  = (num_y_blocks - num_blocks_per_window) // cells_per_step
-
-        # compute HOG features for the entire image
-        feature_img = self.classifier.prepare_img(img_region)
-        hog_features = self.classifier.extract_hog_features(feature_img, False)
-
-        # slide the window of the image
-        for x_block in range(num_x_steps):
-            for y_block in range(num_y_steps):
-                hog_x = x_block * cells_per_step
-                hog_y = y_block * cells_per_step
-
-                features = []
-
-                # extract hog features for this step
-                for hog_feature in hog_features:
-                    hog = np.ravel(hog_feature[hog_y:hog_y+num_blocks_per_window, hog_x:hog_x+num_blocks_per_window])
-                    features.append(hog)
-
-                # extract sub images and color features 
-                img_x = hog_x * self.classifier.hog_pixels_per_cell
-                img_y = hog_y * self.classifier.hog_pixels_per_cell
-
-                color_img = cv2.resize(feature_img[img_y:img_y+window_size, img_x:img_x+window_size], (64,64))
-                features.extend(self.classifier.extract_color_features(color_img))
-
-                # scale features
-                X_norm = self.classifier.scaler.transform(np.concatenate(features).reshape(1, -1))
-
-                # make a prediction
-                pred = self.classifier.classifier_decision_function(X_norm)
-
-                # save the rectange if we think it's a car
-                if pred > 0:
-                    rect_x = np.int(img_x * scale) + x_bounds[0]
-                    rect_y = np.int(img_y * scale) + y_bounds[0]
-                    rect_s = np.int(window_size * scale)
-                    self.detected_rects.append(DetectedRect((rect_x, rect_y), (rect_x + rect_s, rect_y + rect_s), pred))
-
-    def find_car_rects_sw(self, img, x_bounds, y_bounds, window_size):
+    def find_car_rects_sw(self, img, x_bounds, y_bounds, window_size, overlap=0.75):
 
         feature_img = self.classifier.prepare_img(img)
 
         sub_imgs = []
-        windows  = list(self.sliding_windows(x_bounds, y_bounds, window_size, 0.75))
+        windows  = list(self.sliding_windows(x_bounds, y_bounds, window_size, overlap))
 
         # extract images
         for w in windows:
             sub_imgs.append(cv2.resize(feature_img[w[0][1]:w[1][1],w[0][0]:w[1][0]], (64,64)))
 
-        # classifiy in batch
+        # classify in batch
         pred = self.classifier.predict(sub_imgs)
 
         # save the rectangle if we think it's a car
@@ -108,7 +52,11 @@ class CarDetector:
         heatmap = np.zeros((720, 1280), dtype=np.float32)
 
         for rect in self.detected_rects:
-            heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += rect.weight
+            heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += 1
+
+        for rect in self.detected_rects:
+            if np.max(heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]]) > 2:
+                heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += 2
         
         self.heatmaps.append(heatmap)
 
@@ -144,10 +92,10 @@ class CarDetector:
         #self.find_car_rects(img, (32, img_w), (384, 576), 1.5)
         #self.find_car_rects(img, (400, img_w), (400, 496), 1)
 
-        #self.find_car_rects_sw(img, (400, img_w), (400, 496), 64)
-        self.find_car_rects_sw(img, ( 32, img_w), (384, 576), 96)
-        self.find_car_rects_sw(img, (  0, img_w), (400, 656), 128)
-        self.find_car_rects_sw(img, ( 32, img_w), (384, 672), 196)
+        self.find_car_rects_sw(img, (400, img_w), (400, 496), 64, 0.5)
+        self.find_car_rects_sw(img, ( 32, img_w), (384, 576), 96, 0.75)
+        self.find_car_rects_sw(img, (  0, img_w), (400, 656), 128, 0.75)
+        #self.find_car_rects_sw(img, ( 32, img_w), (384, 672), 196)
         #self.find_car_rects_sw(img, (  0, img_w), (400, 656), 256)
 
         self.generate_heatmap()

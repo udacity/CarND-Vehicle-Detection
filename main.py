@@ -35,8 +35,9 @@ def process_video(filename, detector, camera, start_frame=0):
         detector.run(corrected)
 
         # draw rectangles around cars
-        # result = detector.draw_detected_rects(result)
-        result = detector.draw_car_rects(corrected)
+        result = corrected
+        #result = detector.draw_detected_rects(result)
+        result = detector.draw_car_rects(result)
 
         # print duration of frame
         t_delta = int((time.time() - t1) * 1000)
@@ -148,8 +149,8 @@ def main():
         print("ERROR LOADING CAMERA CALIBRATION")
     
     # initialize car classifier and detector
-    clf = CarClassifier.restore('classifier_svc.pkl')
-    detector = CarDetector(clf, heat_threshold=4, num_heat_frames=10)
+    clf = CarClassifier.restore('classifier.h5')
+    detector = CarDetector(clf, heat_threshold=50, num_heat_frames=5)
 
     # debug visualization
     if DEBUG_VISUALIZE:
@@ -157,7 +158,7 @@ def main():
 
     # process video
     #process_video("test_video.mp4", detector, camera)
-    process_video("project_video.mp4", detector, camera, 600)
+    process_video("project_video.mp4", detector, camera, 400)
     #debug_output_search_windows("test_images/test1.jpg", detector, camera)
     #debug_output_search_windows("output_images/captured.jpg", detector, camera)
 
