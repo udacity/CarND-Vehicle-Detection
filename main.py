@@ -35,9 +35,7 @@ def process_video(filename, detector, camera, start_frame=0):
         detector.run(corrected)
 
         # draw rectangles around cars
-        result = corrected
-        #result = detector.draw_detected_rects(result)
-        result = detector.draw_car_rects(result)
+        result = detector.draw_car_rects(corrected)
 
         # print duration of frame
         t_delta = int((time.time() - t1) * 1000)
@@ -68,7 +66,6 @@ def process_video(filename, detector, camera, start_frame=0):
         # debug output
         if DEBUG_VISUALIZE:
             cv2.imshow(DEBUG_WINDOW, result)
-            #cv2.imshow(DEBUG_WINDOW, heatmap)
 
         # video output 
         video_out.write(result)
@@ -89,37 +86,10 @@ def debug_output_search_windows(filename, detector, camera):
     src_img = camera.undistort(cv2.imread(filename))
     video_out = cv2.VideoWriter('output_images/windows.avi', cv2.VideoWriter_fourcc(*'DIB '), 5.0, (1280,720))
 
-    """
-    iterations =[
-        {'scale':1,   'y':(400,496), 'x':(0, src_img.shape[1])},
-        {'scale':1.5, 'y':(384,576), 'x':(32, src_img.shape[1])},
-        {'scale':2,   'y':(400,656), 'x':(0, src_img.shape[1])},
-        {'scale':2,   'y':(384,640), 'x':(0, src_img.shape[1])},
-        {'scale':3,   'y':(384,672), 'x':(32, src_img.shape[1])}
-    ]
-
-    for settings in iterations:
-        frame = np.copy(src_img)
-
-        title = "scale = {}, y_range = {} - {}, x_range = {} - {}".format(settings["scale"], settings["y"][0], settings["y"][1], settings["x"][0], settings["x"][1])
-        cv2.putText(frame, title, (20, 30), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 255), 2)
-        cv2.line(frame, (0, settings["y"][0]), (frame.shape[1], settings["y"][0]), (0, 0, 255), 2)
-        cv2.line(frame, (0, settings["y"][1]), (frame.shape[1], settings["y"][1]), (0, 0, 255), 2)
-
-        for rect in detector.output_detection_windows(src_img, settings["x"], settings["y"], settings["scale"]):
-            cv2.rectangle(frame, rect[0], rect[1], (0, 255, 0), 2)
-            video_out.write(frame)
-            cv2.rectangle(frame, rect[0], rect[1], (255, 0, 0), 2)
-
-        for idx in range(5):
-            video_out.write(frame)
-    """
-
     iterations = [
-        {'size' :  64, 'y':(400,496), 'x':( 0, src_img.shape[1])},
-        {'size' :  96, 'y':(384,576), 'x':(32, src_img.shape[1])},
-        {'size' : 128, 'y':(400,656), 'x':( 0, src_img.shape[1])},
-        {'size' : 192, 'y':(384,672), 'x':(32, src_img.shape[1])}
+        {'size' :  64, 'y':(400,496), 'x':(416, src_img.shape[1]), 'overlap':0.50},
+        {'size' :  96, 'y':(384,576), 'x':(224, src_img.shape[1]), 'overlap':0.50},
+        {'size' : 128, 'y':(400,656), 'x':( 0, src_img.shape[1]), 'overlap':0.75}
     ]
 
     for settings in iterations:
@@ -130,7 +100,7 @@ def debug_output_search_windows(filename, detector, camera):
         cv2.line(frame, (0, settings["y"][0]), (frame.shape[1], settings["y"][0]), (0, 0, 255), 2)
         cv2.line(frame, (0, settings["y"][1]), (frame.shape[1], settings["y"][1]), (0, 0, 255), 2)
 
-        for w in detector.sliding_windows(settings['x'], settings['y'], settings['size'], 0.5):
+        for w in detector.sliding_windows(settings['x'], settings['y'], settings['size'], settings['overlap']):
             cv2.rectangle(frame, w[0], w[1], (0, 255, 0), 2)
             video_out.write(frame)
             cv2.rectangle(frame, w[0], w[1], (255, 0, 0), 2)
@@ -150,7 +120,7 @@ def main():
     
     # initialize car classifier and detector
     clf = CarClassifier.restore('classifier.h5')
-    detector = CarDetector(clf, heat_threshold=50, num_heat_frames=5)
+    detector = CarDetector(clf, heat_threshold=75, num_heat_frames=5)
 
     # debug visualization
     if DEBUG_VISUALIZE:
@@ -158,9 +128,11 @@ def main():
 
     # process video
     #process_video("test_video.mp4", detector, camera)
-    process_video("project_video.mp4", detector, camera, 400)
+    process_video("project_video.mp4", detector, camera)
     #debug_output_search_windows("test_images/test1.jpg", detector, camera)
     #debug_output_search_windows("output_images/captured.jpg", detector, camera)
+
+    #process_video("../CarND-Advanced-Lane-Lines/challenge_video.mp4", detector, camera)
 
     cv2.destroyAllWindows()
 

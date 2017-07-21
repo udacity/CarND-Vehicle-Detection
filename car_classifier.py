@@ -32,11 +32,6 @@ class CarClassifier:
             EarlyStopping(monitor='val_loss', patience=2, verbose=1),
             ModelCheckpoint(filename, monitor='val_acc', save_best_only=True)]
 
-    def prepare_img (self, img):
-        # prepare the image to be classified (e.g color space conversion, image transformations)
-        return img
-        #return cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-
     def train(self, train_generator, train_samples, val_generator, val_samples, epochs):
         self.model.fit_generator(train_generator, samples_per_epoch=train_samples,
                                  validation_data=val_generator,nb_val_samples=val_samples,

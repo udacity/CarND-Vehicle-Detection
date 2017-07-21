@@ -50,7 +50,6 @@ class TrainClassifier:
 
     def create_train_test_sets(self):
         # stack the filename arrays together in a numpy array
-        #X = np.vstack((self.filenames[CAR], self.filenames[NOT_CAR]))
         X = np.array(self.filenames[CAR] + self.filenames[NOT_CAR])
 
         # create the labels array
@@ -90,6 +89,3 @@ if __name__ == '__main__':
 
     print('Training the classifier ...')
     tc.train_classifier()
-
-    #print('Saving the classifier')
-    #clf.save('classifier.h5')
