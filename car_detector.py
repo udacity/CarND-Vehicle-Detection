@@ -54,7 +54,7 @@ class CarDetector:
         # increase heat for rectangles with overlap (to make boundingbox big enough for entire car)
         for rect in self.detected_rects:
             if np.max(heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]]) > 2:
-                heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += 2
+                heatmap[rect.min_c[1]:rect.max_c[1], rect.min_c[0]:rect.max_c[0]] += 3
         
         self.heatmaps.append(heatmap)
 
