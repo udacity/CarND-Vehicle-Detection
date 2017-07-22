@@ -1,0 +1,5 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "python.pythonPath": "C:\\toep\\Anaconda3\\envs\\carnd-term1",
+    "python.linting.pylintEnabled": false
+}
