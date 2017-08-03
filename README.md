@@ -14,7 +14,7 @@ The goals / steps of this project are the following:
 
 ## Final Result Video
 
-[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/_FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/_FdZvMoP0dRU "Veh Detection Video.")
+[![IMAGE ALT TEXT](https://img.youtube.com/vi/FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=FdZvMoP0dRU "Veh Detection Video.")
 
 
 [//]: # (Image References)
@@ -24,7 +24,7 @@ The goals / steps of this project are the following:
 [image3b]: ./examples/sample_region_matches.png
 [image3c]: ./examples/hog_subsample.png
 [image4b]: ./examples/results.png
-[image4]: ./examples/sliding_window.jpg
+[image4]: ./examples/box_matches.png
 [image5]: ./examples/heatmap.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
@@ -54,9 +54,9 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 I tried various combinations of parameters and arrived at using the YCrCb colorspace using 8 pixels per cell with 18 orientation directions for the gradients. I used a 16x16 spatial binning size and 2 cells per block.
 
-#### 3. Training a classifier using HOG features and color features.
+#### 3. Training a Classifier using HOG, Color, and Spatial Features
 
-I trained a linear SVM using a combined feature vector of HOG features, spatial features, and a histogram of color features across all three channels of YCrCb. This can be seen in cell 2 of [python notebook](https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/VehicleDetection.ipynb).
+I trained a linear SVM using a combined feature vector of HOG features, spatial features, and a histogram of color features across all three channels of YCrCb. This can be seen in cell 2 of [my python notebook](https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/VehicleDetection.ipynb).
 The spacial features resized the image to 16x16 pixels and used the resulting color values for each pixel. All three feature vectors were combined and then normalized for each training image.
 
 Training images were categorized as containing or a car or not. And then a Linear SVM was trained with 80% of samples. The resulting 20% were used to validate the results. The accuracy agains the validation set was 100%.
@@ -75,11 +75,9 @@ I moved to a faster approach that extracted features once from a subregion of th
 
 #### 2. Initial Results
 
-Ultimately I searched on five scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+Ultimately I searched on five scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here is an example image:
 
 ![alt text][image4]
-
-![alt text][image4b]
 
 And occasionally some false positives occured, as this shadowed area of the guard rail.
 
@@ -88,6 +86,8 @@ And occasionally some false positives occured, as this shadowed area of the guar
 #### 3. Filtering boxes
 
 From the list of candiate boxes, I created a heat map. I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap. Each bounding box had a single vote, and combined with other boxes to increase the likleyhood of a car detection. Then a thresholding operation was performed to cull low condfidense boxes. This sometimes resulted in a non-detection of a car when only one box was found.
+
+![alt text][image4b]
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
@@ -98,7 +98,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ### video result:
 
-[link to my video result](./project_video_out.mp4)
+[link to my hog video result](./project_video_out.mp4)
 
 ## Neural Network Approach
 
@@ -130,14 +130,14 @@ This created much more consistent results, outlining most all cars and very few 
 
 #### 3. Stablization
 
-I kept a running list of bounding boxes over multiple frames. For each I tracked the average color and dimension of the box. When I get a new candidate box on each frame, I would attempt to match it with a previous box by position and dominant image color. Then I would interpolate towards the new box with some slower rate. I also determine a velocity in X and Y that updates the center of the box each frame. The combination smooths the position and dimensions of the car bounding boxes.
+For continuity, I created a running list of bounding boxes over multiple frames. For each I tracked the average color and dimension of the box. When I get a new candidate box on each frame, I would attempt to match it with a previous box by position and dominant image color. Then I would interpolate towards the new box with some slower rate. I also determine a velocity in X and Y that updates the center of the box each frame. The combination smooths the position and dimensions of the car bounding boxes.
 
 #### 4. Metrics
 
 The box center is reverse projected onto into a more linear space using the same method used in advanced lane finding. 
 ![alt text][image10]
 
-In space, it was simple to assign a lane position by reverse projecting the center of the bounding box with cv2.perspectiveTransform. As the operation required unusual levels of encapsulation in lists and then dereferencing, it's included here:
+In this space it was simple to assign a lane position by reverse projecting the center of the bounding box with cv2.perspectiveTransform. As the operation required unusual levels of encapsulation in lists and then dereferencing, it's included here:
 
 ```code
 
@@ -158,15 +158,33 @@ An simple relative speed estimate is done using the bounding box velocity relati
 
 ---
 
-### Video Implementation
+### Video Result
 
-[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/_FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/_FdZvMoP0dRU "Veh Detection Video.")
+[![IMAGE ALT TEXT](https://img.youtube.com/vi/FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=FdZvMoP0dRU "Veh Detection Video.")
+
 ---
 
 ### Discussion
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I enjoyed working with more traditional image feature based methods and classifiers. They were comprehensible. And when they failed, their failings were consistent with how they operated. However, the number of tunable hyper parameters, and the tendancy to create outliers of both false positives and weak positives, created a real challenge to constructing a robust solution. 
+
+I found the YOLO neural network approach to be immediately powerful. The pre-trained network allowed me to focus on stablizing post-processing and image metrics. The result was robust and overall ran at a faster frame rate.
+
+My lane detection metrics assume a straight road and do not account for curvature. In the later parts of the video you can see where a car along the curve crosses the lane threshold without changing lanes.
+
+The car velocity estimate is a weak approximation and included mainly for fun.
+
+The lane assignment would fail when the main car changes lanes, and needs work to determine our current lane. It also assumes all cars to the left are in an oncoming lane and would need work to assign more accurately.
+
+I spent some time trying to track cars through overlaps, but that fails at the moment. I tried using the cars last momentum and detect when it was obscurred and continue moving the box until it was discoverred again. This didn't work as well as I hoped and is disabled in the final implementation.
+
+The color approximation is a weak indicator identity in the bounding box, and could be replaced by some online SVM continually fitting against more traditional features like hog, spacial, or histogram of colors. That might allow it to maintain more continuity through obscurations.
+
+
+
+
+
 
 
