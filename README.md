@@ -1,4 +1,5 @@
-**Vehicle Detection Project**
+# Vehicle Detection Project
+
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
 
@@ -13,7 +14,7 @@ The goals / steps of this project are the following:
 
 ## Final Result Video
 
-[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/FdZvMoP0dRU "Veh Detection Video.")
+[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/_FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/_FdZvMoP0dRU "Veh Detection Video.")
 
 
 [//]: # (Image References)
@@ -32,9 +33,9 @@ The goals / steps of this project are the following:
 [image10]: ./examples/persp_transform.png
 [video1]: ./project_video_out.mp4
 
-###Histogram of Oriented Gradients (HOG)
+### Histogram of Oriented Gradients (HOG)
 
-####1. Tracking objects using HOG features from the training images.
+#### 1. Tracking objects using HOG features from the training images.
 
 The code for this step is contained in the IPython notebook (here)[https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/VehicleDetection.ipynb].
 
@@ -49,20 +50,20 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 ![alt text][image2]
 
-####2. Final choice of HOG parameters.
+#### 2. Final choice of HOG parameters.
 
 I tried various combinations of parameters and arrived at using the YCrCb colorspace using 8 pixels per cell with 18 orientation directions for the gradients. I used a 16x16 spatial binning size and 2 cells per block.
 
-####3. Training a classifier using HOG features and color features.
+#### 3. Training a classifier using HOG features and color features.
 
-I trained a linear SVM using a combined feature vector of HOG features, spatial features, and a histogram of color features across all three channels of YCrCb. This can be seen in cell 2 of (python notebook)[https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/VehicleDetection.ipynb].
+I trained a linear SVM using a combined feature vector of HOG features, spatial features, and a histogram of color features across all three channels of YCrCb. This can be seen in cell 2 of [python notebook](https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/VehicleDetection.ipynb).
 The spacial features resized the image to 16x16 pixels and used the resulting color values for each pixel. All three feature vectors were combined and then normalized for each training image.
 
 Training images were categorized as containing or a car or not. And then a Linear SVM was trained with 80% of samples. The resulting 20% were used to validate the results. The accuracy agains the validation set was 100%.
 
-###Sliding Window Search
+### Sliding Window Search
 
-####1. Choosing a region of image to search
+#### 1. Choosing a region of image to search
 
 I first use a sliding window approach, where the features for each region are calculated and then evaluated against the trained model. This technique creates a window of subset of the image, then moves it by some standard offset, often overlapping the previous window by some amount. There's a tradeoff between accuracy and time, as many windows will be expensive to evaluate.
 
@@ -72,7 +73,7 @@ I moved to a faster approach that extracted features once from a subregion of th
 
 ![alt text][image3c]
 
-####2. Initial Results
+#### 2. Initial Results
 
 Ultimately I searched on five scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
 
@@ -84,7 +85,7 @@ And occasionally some false positives occured, as this shadowed area of the guar
 
 ![alt text][image3b]
 
-####3. Filtering boxes
+#### 3. Filtering boxes
 
 From the list of candiate boxes, I created a heat map. I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap. Each bounding box had a single vote, and combined with other boxes to increase the likleyhood of a car detection. Then a thresholding operation was performed to cull low condfidense boxes. This sometimes resulted in a non-detection of a car when only one box was found.
 
@@ -99,7 +100,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 [link to my video result](./project_video_out.mp4)
 
-###Neural Network Approach
+## Neural Network Approach
 
 Some research indicated that modern neural networks have some increased capacity for locating objects of many different classes at once in different subregions of an image, even when overlapping or partially obscurred. I chose to research (YOLO)[https://arxiv.org/abs/1506.02640] and investigate how it worked. YOLO is short for You Only Look Once, and is an approach that uses a single pass through a deep fully convolutional network to generate bounding box candidates, and confidense scores. A post processing step takes the final output tensor, which may be of dimensions like 7x7x30, and analyzes it for proposals.
 
@@ -108,7 +109,7 @@ The 7x7 represents the number of regions in height and width evenly divided into
 Then a thresholding operation occurs to cull bounding boxes with lower confidense and the remaing presented as results.
 ![alt text][image8]
 
-####1. Initial setup
+#### 1. Initial setup
 
 I used the code from allanzelener on github [here](https://github.com/allanzelener/YAD2K) as a starting point. I download pre-trained network weights and converted them to Keras/Tensorflow format using the provided scripts. 
 
@@ -121,17 +122,17 @@ wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolo.cfg
 This network uses 24 convolutional layers, with batch normalization and leaky-relu activation. 
 ![alt text][image9]
 
-####2. Initial scan
+#### 2. Initial scan
 
-I then created a python script to run this scan over multiple frames of a video and output a final video. This script is (here)[https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/process_vid_yolo.py].
+I then created a python script to run this scan over multiple frames of a video and output a final video. This script is [here](https://github.com/tawnkramer/CarND-Vehicle-Detection/blob/master/process_vid_yolo.py).
 
 This created much more consistent results, outlining most all cars and very few failures. But the regions were not very stable from frame to frame.
 
-####3. Stablization
+#### 3. Stablization
 
 I kept a running list of bounding boxes over multiple frames. For each I tracked the average color and dimension of the box. When I get a new candidate box on each frame, I would attempt to match it with a previous box by position and dominant image color. Then I would interpolate towards the new box with some slower rate. I also determine a velocity in X and Y that updates the center of the box each frame. The combination smooths the position and dimensions of the car bounding boxes.
 
-####4. Metrics
+#### 4. Metrics
 
 The box center is reverse projected onto into a more linear space using the same method used in advanced lane finding. 
 ![alt text][image10]
@@ -159,13 +160,12 @@ An simple relative speed estimate is done using the bounding box velocity relati
 
 ### Video Implementation
 
-[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/FdZvMoP0dRU "Veh Detection Video.")
-
+[![IMAGE ALT TEXT](https://img.youtube.com/vi/https://youtu.be/_FdZvMoP0dRU/0.jpg)](https://www.youtube.com/watch?v=https://youtu.be/_FdZvMoP0dRU "Veh Detection Video.")
 ---
 
-###Discussion
+### Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
