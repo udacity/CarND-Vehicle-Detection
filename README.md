@@ -11,6 +11,7 @@ The goals / steps of this project are the following:
 * Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
 * Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
 * Estimate a bounding box for vehicles detected.
+* Evaluate Neural Network approach to object detection
 
 ## Final Result Video
 
@@ -102,7 +103,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ## Neural Network Approach
 
-Some research indicated that modern neural networks have some increased capacity for locating objects of many different classes at once in different subregions of an image, even when overlapping or partially obscurred. I chose to research (YOLO)[https://arxiv.org/abs/1506.02640] and investigate how it worked. YOLO is short for You Only Look Once, and is an approach that uses a single pass through a deep fully convolutional network to generate bounding box candidates, and confidense scores. A post processing step takes the final output tensor, which may be of dimensions like 7x7x30, and analyzes it for proposals.
+Some research indicated that modern neural networks have some increased capacity for locating objects of many different classes at once in different subregions of an image, even when overlapping or partially obscurred. I chose to research [YOLO](https://arxiv.org/abs/1506.02640) and investigate how it worked. YOLO is short for You Only Look Once, and is an approach that uses a single pass through a deep fully convolutional network to generate bounding box candidates, and confidense scores. A post processing step takes the final output tensor, which may be of dimensions like 7x7x30, and analyzes it for proposals.
 
 The 7x7 represents the number of regions in height and width evenly divided into the image. Each cell block contains the class probablity that, if a bounding box is found, it will contain an object of a certain class. The 30 values of the tensor for each block contain two bounding box proposals, each with a confidense value and dimensions - 5 values each. The remaining 20 values are one hot encoded class scores indicating confidense for each class. Typically a softmax will turn this one hot encoding in a probablity and the most likely is chosen. 
 
