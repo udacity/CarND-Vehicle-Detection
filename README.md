@@ -197,7 +197,7 @@ out_clip.write_videofile(output_file, audio=False)
 
 ## Conclusions and Future Improvements
 
-In this project, we studied on of the key components of autonomous vehicles called **Detection and Tracking**. One of the main objects of this project is to familiarize ourself with traditional computer vision and machine learning techniques. Therefore, we used HOG and special binnings for feature extraction. In addition to that Linear SVM classifier was used for object detection.
+In this project, we studied one of the key components of autonomous vehicles called **Detection and Tracking**. One of the main objects of this project is to familiarize ourself with traditional computer vision and machine learning techniques. Therefore, we used HOG and special binnings for feature extraction. In addition to that Linear SVM classifier was used for object detection.
 
 Though vehicle detection works well, the key drawback of this system is its performance. The number of frames processed per second was very low. Hence, it is very difficult it uses it for real-time applications. Therefore, I would like to propose following enhancements.
 
