@@ -18,7 +18,7 @@ After experimentation (see below), I came up with the following pipeline in [veh
 
 # Method for feature extraction
 I explored color histogram, color spatial binning and HOG features. Different color spaces, bin sizes, filter sizes, and HOG parameters are explored. I ended up constructing the feature vector using 'HLS' color-space histogram and a two-level (64x64 and 128x128) HOG features.
-The function for feature extraction is [here](), which is a modified version of the one appeared in class.
+The function for feature extraction is [here](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L154), which is a modified version of the one appeared in class.
 
 There involved a lot of trial-and-error experiments, finally I chose the following HOG parameters:
 * orient=9: use 9 distinctive directions for HOG gradient binning.
@@ -41,7 +41,7 @@ Udacity project data set was used.
 ![example data](output_images/example_data.png)
 
  
-Features were extracted using function [`extract_features_from_img_list`]() and normalized using function [`get_features_norm`]() before saving to pickle files in [feature_extraction.py](./feature_extraction.py).
+Features were extracted using function [`extract_features_from_img_list`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L154) and normalized using function [`get_features_norm`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L205) before saving to pickle files in [feature_extraction.py](./feature_extraction.py).
 
 ## an example of the normalized feature vector:
 ![normalized features](output_images/feature_normalized.png)
@@ -77,7 +77,7 @@ I used two-level sliding windows, 64x64 and 128x128, on the lower-half of the im
 
 ## Example feature-extracted windows
 
-After feature extraction, operations of the classifier are carried out in function [`search_windows`](). Then, using function [`draw_boxes`]() we get something like this:
+After feature extraction, operations of the classifier are carried out in function [`search_windows`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L325). Then, using function [`draw_boxes`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L13) we get something like this:
 
 [!on_windows](output_images/windows.jpg)
 
