@@ -97,10 +97,10 @@ After feature extraction, operations of the classifier are carried out in functi
 
 ## Filtering
 
-I used a ring buffer to store historical heatmaps. The accumulative heatmap out of the ring buffer is used to determine the bounding boxes.
+I used a [ring buffer](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/vehicle_detection.py#L16) to store historical heatmaps. The accumulative heatmap out of the ring buffer is used to determine the bounding boxes.
 * the ring buffer stores 10 most-recent heatmap snapshots.
     * essentially, using a ring buffer means we are using a box-average filter for smoothing.
-* a threshold of 8 is used to mask any pixels whose accumulative detection count is less than this number.
+* using the [`apply_threshold`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L366) function, a threshold of 8 is used to mask any pixels whose accumulative detection count is less than this number.
     * this is a simple mechanism to reject transient false positive detections. 
 * those hyperparameters can be tuned for better detection.
 
