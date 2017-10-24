@@ -73,7 +73,7 @@ I used two-level sliding windows, 64x64 and 128x128, on the lower-half of the im
 
 * to reduce the complexity of the example image, here I used 25% overlap to demonstrate the pipeline. However, 80% overlap is used for the final video processing.
 
-![sliding windows](output_images/example_sliding_wind.jpg)
+![sliding windows](output_images/sliding_wind.jpg)
 
 ## Example feature-extracted windows
 
