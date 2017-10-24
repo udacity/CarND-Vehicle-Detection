@@ -1,4 +1,9 @@
-*.p
+.idea/
+.ipynb_checkpoints/
+X_train*.p
+X_test*.p
+X_*car*.p
+y*.p
 output_images/project-video-processed-0.8.mp4
 output_images/project-video-processed.mp4
 output_images/project_video-processed-10-10.mp4
