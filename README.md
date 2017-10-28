@@ -41,13 +41,13 @@ Udacity project data set was used.
 ![example data](output_images/example_data.png)
 
  
-Features were extracted using function [`extract_features_from_img_list`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L154) and normalized using function [`get_features_norm`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L205) before saving to pickle files in [feature_extraction.py](./feature_extraction.py).
+Features were extracted using function [`extract_features_from_img_list`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L154) and normalized using function [`get_features_norm`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L205) before saving to pickle files in [feature_extraction.py](feature_extract_for_training.py).
 
 ## an example of the normalized feature vector:
 ![normalized features](output_images/feature_normalized.png)
 
 
-A separate normalized features/labels data set was also saved in [feature_extraction_small.py](./feature_extraction_small.py) as the test set for validation purposes (see below).
+A separate normalized features/labels data set was also saved in [feature_extraction_small.py](feature_extract_for_training_small.py) as the test set for validation purposes (see below).
 
 Since the project data set contains time-series data, I shuffled normalized features/label data set before saving them.
 
@@ -62,8 +62,13 @@ The penalty 'C' and kernel choices were iterated in my experiments. I found that
 For SVC, I ended up using the 'rbf' kernel and C=2 in [train.py](./train.py), as determined by [tune_train.py](./tune_train.py), on the project data set.
 
 Classifers for both algorithms were trained but finally I used the LinearSVC for project submission since it is faster and the result is better just using the default parameters.
+
+## Choice of features
+
+Different combinations of features were tested throughout the entire pipeline. It turned out that the 'YCrCb' color space works best for HOG features and 'HLS' color space works best for color histogram features. I ended up using all channels of the 'YCrCb' color space for HOG features, and just the 'S' channel of the 'HLS' color space for color histogram features. The spatial bin features was not used.
+
 # Model validation
-To validate the model, a separate test data set (10% split from training data) was used in [validate.py](./validate.py). The validation score is 0.9938 for SVC and 0.9905 for LinearSVC.
+To validate the model, a separate test data set (10% split from training data) was used in [validate.py](./validate.py). The validation score is 0.9938 for SVC and 0.9935 for LinearSVC.
 
 # Sliding window search
 I used two-level sliding windows, 64x64 and 128x128, on the lower-half of the image frame. 80% overlap is used for the final pipeline.
@@ -77,7 +82,7 @@ I used two-level sliding windows, 64x64 and 128x128, on the lower-half of the im
 
 ## Example feature-extracted windows
 
-After feature extraction, operations of the classifier are carried out in function [`search_windows`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L325). Then, using function [`draw_boxes`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L13) we get something like this:
+After feature extraction, operations of the classifier are carried out in function [`search_windows_naive`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L325). Then, using function [`draw_boxes`](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/master/util.py#L13) we get something like this:
 
 ![on_windows](output_images/windows.jpg)
 
@@ -104,10 +109,13 @@ I used a [ring buffer](https://github.com/bo-rc/CarND-Vehicle-Detection/blob/mas
     * this is a simple mechanism to reject transient false positive detections. 
 * those hyperparameters can be tuned for better detection.
 
+During the heatmap generation step, I used a guassian blur operation to smooth the output heatmap such that adjacent islands can be combined if they are close enough. This essentially dropped noise for the drawing of windows.
+
 # Discussion
 
 Due to the time limitation, I chose straightforward ways for the implementation. Much can be improved:
 * For multi-level windows sliding, we need to calculate the highest resolution HOG features once then we can perform sub-sampling to obtain lower-resolution HOG, which will improve the performance.
+    * I implemented an initial version for this method, however, the result is not as good as the naive method which calculates HOG features separately for each sliding window. The speed-up is moderate so I did not use this method for submission. 
 * For filtering detection in a video, we can create a bounding box class and use its objects to track detection. For example, true detection will be consistent among adjacent frames and velocity can be estimated so that we can track the vehicle using predictive methods.
     * For false positive rejections, we can reject any bounding boxes whose lifetime are too short, whose sizes change dramatically or whose motion are not smooth.
 

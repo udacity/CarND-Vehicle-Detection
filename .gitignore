@@ -1,3 +1,4 @@
+data/
 .idea/
 .ipynb_checkpoints/
 X_train*.p
