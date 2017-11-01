@@ -4,14 +4,16 @@ from sklearn.utils import shuffle
 import pickle
 
 
-imgs_cars_file = './data/raw/imgs_cars.p'
-imgs_noncar_file = './data/raw/imgs_noncar.p'
+# input
+imgs_cars_file = './data/augmented/imgs_cars.p'
+imgs_noncar_file = './data/augmented/imgs_noncar.p'
 
-X_scaler_file = './model/raw/X_scaler.p'
-X_train_file = './data/raw/train/X_train.p'
-y_train_file = './data/raw/train/y_train.p'
-X_test_file = './data/raw/test/X_test.p'
-y_test_file = './data/raw/test/y_test.p'
+# output
+X_scaler_file = './model/augmented/X_scaler.p'
+X_train_file = './data/augmented/train/X_train.p'
+y_train_file = './data/augmented/train/y_train.p'
+X_test_file = './data/augmented/test/X_test.p'
+y_test_file = './data/augmented/test/y_test.p'
 
 # load imgs to array
 with open(imgs_cars_file, 'rb') as file:

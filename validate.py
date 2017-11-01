@@ -1,8 +1,8 @@
 import pickle
 
-X_test_file = './data/raw/test/X_test.p'
-y_test_file = './data/raw/test/y_test.p'
-model_file = './model/raw/LinearSVC.p'
+X_test_file = './data/raw/X_train_small.p'
+y_test_file = './data/raw/y_train_small.p'
+model_file = './model/augmented/LinearSVC.p'
 
 with open(X_test_file, mode='rb') as f:
         X_test = pickle.load(f)

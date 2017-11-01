@@ -6,9 +6,9 @@ import pickle
 
 cars_path = '../vehicle_detect/vehicles_smallset/**/'
 noncars_path = '../vehicle_detect/non-vehicles_smallset/**/'
-X_scaler_file = './model/X_scaler_small.p'
-X_train_file = './data/X_train_small.p'
-y_train_file = './data/y_train_small.p'
+X_scaler_file = './model/raw/X_scaler_small.p'
+X_train_file = './data/raw/X_train_small.p'
+y_train_file = './data/raw/y_train_small.p'
 
 # load imgs to array
 car_list = get_img_array_from_path(cars_path, type='jpeg')
@@ -17,15 +17,9 @@ noncar_list = get_img_array_from_path(noncars_path, type='jpeg')
 print('n_noncars: ', len(noncar_list))
 
 
-X_car = extract_features_from_img_list(car_list, color_space='HSV', spatial_size=(32, 32),
-                                       color_bins=32, orient=32,
-                                       pix_per_cell=16, cell_per_block=2, hog_chan=0,
-                                       spatial_feat=True, color_hist_feat=True, hog_feat=True)
+X_car = extract_features_from_img_list(car_list)
 
-X_noncar = extract_features_from_img_list(noncar_list, color_space='HSV', spatial_size=(32, 32),
-                                          color_bins=32, orient=32,
-                                          pix_per_cell=16, cell_per_block=2, hog_chan=0,
-                                          spatial_feat=True, color_hist_feat=True, hog_feat=True)
+X_noncar = extract_features_from_img_list(noncar_list)
 
 
 X_scaler, scaled_X = get_features_norm(X_car, X_noncar)

@@ -2,9 +2,11 @@ import cv2
 import matplotlib.image as mpimg
 import numpy as np
 from scipy.ndimage.measurements import label
+from scipy.spatial.distance import pdist
 from skimage.feature import hog
 from helpers import *
 from parameters import param
+from vehicle import Vehicle
 
 
 def add_heat(heatmap, bbox_list):
@@ -41,11 +43,26 @@ def draw_labeled_bboxes(img, labels):
     return img
 
 
+def get_labeled_bboxes(labels):
+    # Iterate through all detected car
+    bbox_list = []
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox_list.append(((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy))))
+
+    return bbox_list
+
+
 def slide_window(img,
                  x_start_stop=[param['xstart'], param['xstop']],
                  y_start_stop=[param['ystart'], param['ystop']],
                  xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
-    """Returns a list of windows, covering the input img."""
+    """Returns a list of windows64, covering the input img."""
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] == None:
         x_start_stop[0] = 0
@@ -61,7 +78,7 @@ def slide_window(img,
     # Compute the number of pixels per step in x/y
     nx_pix_per_step = np.int(xy_window[0]*(1 - xy_overlap[0]))
     ny_pix_per_step = np.int(xy_window[1]*(1 - xy_overlap[1]))
-    # Compute the number of windows in x/y
+    # Compute the number of windows64 in x/y
     nx_buffer = np.int(xy_window[0]*(xy_overlap[0]))
     ny_buffer = np.int(xy_window[1]*(xy_overlap[1]))
     nx_windows = np.int((xspan-nx_buffer)/nx_pix_per_step)
@@ -70,7 +87,7 @@ def slide_window(img,
     window_list = []
     # Loop through finding x and y window positions
     # Note: you could vectorize this step, but in practice
-    # you'll be considering windows one by one with your
+    # you'll be considering windows64 one by one with your
     # classifier, so looping makes sense
     for ys in range(ny_windows):
         for xs in range(nx_windows):
@@ -81,7 +98,7 @@ def slide_window(img,
             endy = starty + xy_window[1]
             # Append window position to list
             window_list.append(((startx, starty), (endx, endy)))
-    # Return the list of windows
+    # Return the list of windows64
     return window_list
 
 
@@ -284,9 +301,9 @@ def extract_features_from_img_list(img_list,
 
 
 def search_windows_naive(img, windows, clf, scaler, ref_window_size=param['ref_window_size']):
-    # 1) Create an empty list to receive positive detection windows
+    # 1) Create an empty list to receive positive detection windows64
     on_windows = []
-    # 2) Iterate over all windows in the list
+    # 2) Iterate over all windows64 in the list
     for window in windows:
         # 3) Extract the test window from original image
         test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]],
@@ -301,24 +318,28 @@ def search_windows_naive(img, windows, clf, scaler, ref_window_size=param['ref_w
         # 7) If positive (prediction == 1) then save the window
         if prediction == 1:
             on_windows.append(window)
-    # 8) Return windows for positive detections
+    # 8) Return windows64 for positive detections
     return on_windows
 
 
-def annotate_img(img, heatmap_cache, clf, X_scaler, thresh=param['thresh'], smooth=param['smooth']):
+def annotate_img(img, heatmap_cache, clf, X_scaler, thresh=param['thresh'], smooth=param['smooth'],
+                 l1_size=param['l1_sliding_window_size'], l2_size=param['l2_sliding_window_size']):
 
-    win_128 = slide_window(img, xy_window=(128, 128), xy_overlap=(param['overlap'], param['overlap']))
-    win_64 = slide_window(img, xy_window=(64, 64), xy_overlap=(param['overlap'], param['overlap']))
+    win_l1 = slide_window(img, xy_window=(l1_size, l1_size), xy_overlap=(param['overlap'], param['overlap']))
+    win_l2 = slide_window(img, xy_window=(l2_size, l2_size), xy_overlap=(param['overlap'], param['overlap']))
 
-    on_win_128 = search_windows_naive(img, win_128, clf, X_scaler)
-    on_win_64 = search_windows_naive(img, win_64, clf, X_scaler)
+    on_win_l1 = search_windows_naive(img, win_l1, clf, X_scaler)
+    on_win_l2 = search_windows_naive(img, win_l2, clf, X_scaler)
 
-    all_on_windows = on_win_128 + on_win_64
+    all_on_windows = on_win_l1 + on_win_l2
 
-    print('num on windows: ', len(all_on_windows))
+    # cv2.imshow('on_windows',draw_boxes(img,all_on_windows))
+    # cv2.waitKey(2000)
+
+    print('num on_windows: ', len(all_on_windows))
     heatmap = np.zeros_like(img[:, :, 0]).astype(np.uint8)
     heatmap = add_heat(heatmap, all_on_windows)
-    heatmap = apply_threshold(heatmap, 2)
+    heatmap = apply_threshold(heatmap, 1)
 
     heatmap_cache.append(heatmap)
     heatmap_graph = apply_threshold(sum(heatmap_cache), thresh)
@@ -327,6 +348,91 @@ def annotate_img(img, heatmap_cache, clf, X_scaler, thresh=param['thresh'], smoo
     labels = label(heatmap_graph)
 
     img_out = draw_labeled_bboxes(img, labels)
+
+    return img_out
+
+# this is used by annotate_img_vehicle to store a list of cars found
+vehicle_list = []
+
+
+def annotate_img_vehicle(img, clf, X_scaler, vehicles=vehicle_list,
+                 l1_size=param['l1_sliding_window_size'], l2_size=param['l2_sliding_window_size'], smooth=param['smooth']):
+    win_l1 = slide_window(img, xy_window=(l1_size, l1_size), xy_overlap=(param['overlap'], param['overlap']))
+    win_l2 = slide_window(img, xy_window=(l2_size, l2_size), xy_overlap=(param['overlap'], param['overlap']))
+
+    on_win_l1 = search_windows_naive(img, win_l1, clf, X_scaler)
+    on_win_l2 = search_windows_naive(img, win_l2, clf, X_scaler)
+
+    all_on_windows = on_win_l1 + on_win_l2
+
+    print('num on_windows: ', len(all_on_windows))
+    heatmap = np.zeros_like(img[:, :, 0]).astype(np.uint8)
+    heatmap = add_heat(heatmap, all_on_windows)
+
+    # checking new cars using a higher threshold to be more sure about a car
+    heatmap_high_confidence = apply_threshold(heatmap, 4)
+    heatmap_high_confidence = cv2.GaussianBlur(heatmap_high_confidence, (smooth, smooth), 0)
+    bbox_list_high_confidence = get_labeled_bboxes(label(heatmap_high_confidence))
+
+    print('alive vehicles: ', len(vehicles))
+    for bbox in bbox_list_high_confidence:
+        bbox_center = [(bbox[0][0] + bbox[1][0]) // 2, (bbox[0][1] + bbox[1][1]) // 2]
+
+        # first car creation
+        if len(vehicles) == 0:
+            vehicles.append(Vehicle(bbox))
+            print('create first car {}'.format(vehicles[-1].id))
+        # there are cars already, check if this bbox belongs to any of them
+        else:
+            exist_flag = 0
+            for car in vehicles:
+                # print('bbox - car {} distance: {}'.format(car.id, pdist(np.vstack((car.center, bbox_center)))[0]))
+                if pdist(np.vstack((car.center, bbox_center)))[0] < max(car.size):
+                    exist_flag = 1
+                    break
+                    # print('this bbox belongs to existing vehicles')
+            if exist_flag == 0:
+                vehicles.append(Vehicle(bbox))
+                print('Found new car {}'.format(vehicles[-1].id))
+
+    # updating cars
+    heatmap_low_confidence = apply_threshold(heatmap, 2)
+    bbox_list_low_confidence = get_labeled_bboxes(label(heatmap_low_confidence))
+
+    for car in vehicles:
+        car.update(bbox_list_low_confidence)
+
+    # first, check if car is alive, if not drop it from vehicle list
+    n_cars_prev = len(vehicles)
+    vehicles = [car for car in vehicles if car.alive is True]
+    n_cars_current = len(vehicles)
+    print('dropping {} non-alive cars'.format(n_cars_prev - n_cars_current))
+
+    # second, merge cars which are too close to each other
+    remove_idxes = []
+    for i in range(len(vehicles)):
+        ref_car = vehicles[i]
+        for j in range(i+1, len(vehicles)):
+            current_car = vehicles[j]
+            if pdist(np.vstack((ref_car.center, current_car.center)))[0] < 16:
+                remove_idxes.append(i)
+                current_car.center = list_list_mean(current_car.center, ref_car.center)
+                current_car.vel = list_list_mean(current_car.vel, ref_car.vel)
+
+    print('merging cars nearby.')
+    n_cars_current = len(vehicles)
+    print('remove idx: ', remove_idxes)
+    vehicles = [car for idx, car in enumerate(vehicles) if idx not in remove_idxes]
+    n_cars_merged = len(vehicles)
+    print('dropping {} nearby cars'.format(n_cars_current - n_cars_merged))
+
+    bbox_draw = []
+
+    # draw bbox for each car
+    for car in vehicles:
+        bbox_draw.append(car.get_bbox())
+
+    img_out = draw_boxes(img, bbox_draw)
 
     return img_out
 
@@ -395,9 +501,9 @@ def patch_features(img, p_size=64,
 
 # needs testing:
 def search_windows_subsample(img, windows, clf, scaler, hog_full, patch_size=64):
-    # 1) Create an empty list to receive positive detection windows
+    # 1) Create an empty list to receive positive detection windows64
     on_windows = []
-    # 2) Iterate over all windows in the list
+    # 2) Iterate over all windows64 in the list
     for window in windows:
         # 3) Extract the test window from original image
         # test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (patch_size, patch_size))
@@ -411,7 +517,7 @@ def search_windows_subsample(img, windows, clf, scaler, hog_full, patch_size=64)
         # 7) If positive (prediction == 1) then save the window
         if prediction == 1:
             on_windows.append(window)
-    # 8) Return windows for positive detections
+    # 8) Return windows64 for positive detections
     return on_windows
 
 

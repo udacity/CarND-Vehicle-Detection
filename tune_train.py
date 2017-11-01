@@ -10,7 +10,7 @@ with open("X_train_small.p", mode='rb') as f:
 with open("y_train_small.p", mode='rb') as f:
         y_train = pickle.load(f)
 
-parameters = {'kernel':('linear', 'rbf'), 'C':[1, 2, 4, 8]}
+parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 0.5, 1, 2, 4, 8]}
 svc = svm.SVC()
 
 clf = GridSearchCV(svc, parameters, verbose=4)

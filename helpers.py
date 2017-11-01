@@ -11,7 +11,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def get_img_array_from_path(path, type='jpeg', r=True):
+def list_list_mean(list1, list2):
+    meanx = (list1[0]+list2[0]) //2
+    meany = (list1[1]+list2[1]) //2
+    result = [meanx, meany]
+    return result
+
+
+def get_img_array_from_path(path, type='jpeg', r=True, resize=True):
 
     imgs = []
     imgs_path = glob.glob(path + '*.' + type, recursive=r)
@@ -20,7 +27,8 @@ def get_img_array_from_path(path, type='jpeg', r=True):
     for file in imgs_path:
         img = cv2.imread(file)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, dsize=(64, 64))
+        if resize:
+            img = cv2.resize(img, dsize=(64, 64))
         imgs.append(img)
 
     return np.array(imgs)

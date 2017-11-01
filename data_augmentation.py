@@ -5,11 +5,11 @@ import pickle
 cars_path = '../vehicle_detect/vehicles/**/'
 noncars_path = '../vehicle_detect/non-vehicles/**/'
 
-imgs_cars_file = './data/imgs_cars.p'
-imgs_noncar_file = './data/imgs_noncar.p'
+imgs_cars_file = './data/raw/imgs_cars.p'
+imgs_noncar_file = './data/raw/imgs_noncar.p'
 
-imgs_cars_augmented_file = './data/augmented/imgs_cars2.p'
-imgs_noncar_augmented_file = './data/augmented/imgs_noncar2.p'
+imgs_cars_augmented_file = './data/augmented/imgs_cars.p'
+imgs_noncar_augmented_file = './data/augmented/imgs_noncar.p'
 
 # load imgs to array
 car_list = get_img_array_from_path(cars_path, type='png')

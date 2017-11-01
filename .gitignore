@@ -1,3 +1,6 @@
+out-frames/*
+make_*
+testing/
 data/
 .idea/
 .ipynb_checkpoints/

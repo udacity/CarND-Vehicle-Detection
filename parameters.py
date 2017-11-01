@@ -1,11 +1,13 @@
 param = {
     # for search
     'ref_window_size': 64,
+    'l1_sliding_window_size': 96,
+    'l2_sliding_window_size': 64,
     'xstart': None,
     'xstop': None,
-    'ystart': 400,
-    'ystop': 675,
-    'overlap': 0.8,
+    'ystart': 400, # just above horizon
+    'ystop': 675, # just above the car hood
+    'overlap': 0.75,
     'scale': 2,
     # for spatial feature
     'spatial_feat': False,
@@ -26,7 +28,7 @@ param = {
     'pix_per_cell': 8,
     'cell_per_block': 2,
     # for smoothing
-    'thresh': 4,
+    'thresh': 5,
     'smooth': 41
 }
 
