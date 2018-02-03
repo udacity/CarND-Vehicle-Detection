@@ -7,37 +7,39 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.model_selection import train_test_split
+from sklearn.externals import joblib
 from lesson_functions import *
 
-# dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
 # svc = dist_pickle["svc"]
-# X_scaler = dist_pickle["scaler"]
-# orient = dist_pickle["orient"]
-# pix_per_cell = dist_pickle["pix_per_cell"]
-# cell_per_block = dist_pickle["cell_per_block"]
-# spatial_size = dist_pickle["spatial_size"]
-# hist_bins = dist_pickle["hist_bins"]
+svc = joblib.load('svc_model.pkl')
+X_scaler = dist_pickle["scaler"]
+
+color_space = dist_pickle["color_space"]
+orient = dist_pickle["orient"]
+pix_per_cell = dist_pickle["pix_per_cell"]
+cell_per_block = dist_pickle["cell_per_block"]
+hog_channel = dist_pickle["hog_channel"]
+spatial_size = dist_pickle["spatial_size"]
+hist_bins = dist_pickle["hist_bins"]
 
 
-svc = LinearSVC()
-# X_scaler = StandardScaler()
+
+# color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+# orient = 60  # HOG orientations
+# pix_per_cell = 6 # HOG pixels per cell
+# cell_per_block = 3 # HOG cells per block
+# hog_channel = 1 # Can be 0, 1, 2, or "ALL"
+# spatial_size = (16, 16) # Spatial binning dimensions
+# hist_bins = 32    # Number of histogram bins
+# spatial_feat = True # Spatial features on or off
+# hist_feat = True # Histogram features on or off
+# hog_feat = True # HOG features on or off
+# y_start_stop = [450, 700] # Min and max in y to search in slide_window()
 
 
-color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 60  # HOG orientations
-pix_per_cell = 6 # HOG pixels per cell
-cell_per_block = 3 # HOG cells per block
-hog_channel = 1 # Can be 0, 1, 2, or "ALL"
-spatial_size = (16, 16) # Spatial binning dimensions
-hist_bins = 32    # Number of histogram bins
-spatial_feat = True # Spatial features on or off
-hist_feat = True # Histogram features on or off
-hog_feat = True # HOG features on or off
-y_start_stop = [450, 700] # Min and max in y to search in slide_window()
-
-
-img = mpimg.imread('./examples/signs_vehicles_jpg.jpg')
-
+img = mpimg.imread('./test_images/test1.jpg')
+print(img)
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
@@ -111,6 +113,6 @@ ystart = 400
 ystop = 656
 scale = 1.5
 
-# out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-# plt.imshow(out_img)
+plt.imshow(out_img)
