@@ -12,20 +12,20 @@ from lesson_functions import *
 from sklearn.model_selection import train_test_split
 
 # Read in cars and notcars
-images = glob.glob('*.jpeg')
 cars = []
 notcars = []
+images = glob.glob('./vehicles/*/*.png')
 for image in images:
-    if 'image' in image or 'extra' in image:
-        notcars.append(image)
-    else:
-        cars.append(image)
+    cars.append(image)
+images = glob.glob('./non-vehicles/*/*.png')
+for image in images:
+    notcars.append(image)
 
 # Reduce the sample size because
 # The quiz evaluator times out after 13s of CPU time
-sample_size = 500
-cars = cars[0:sample_size]
-notcars = notcars[0:sample_size]
+# sample_size = 500
+# cars = cars[0:sample_size]
+# notcars = notcars[0:sample_size]
 
 ### TODO: Tweak these parameters and see how the results change.
 color_space = 'RGB'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -38,7 +38,7 @@ hist_bins = 32  # Number of histogram bins
 spatial_feat = True  # Spatial features on or off
 hist_feat = True  # Histogram features on or off
 hog_feat = True  # HOG features on or off
-y_start_stop = [450, 700]  # Min and max in y to search in slide_window()
+# y_start_stop = [450, 700]  # Min and max in y to search in slide_window()
 
 car_features = extract_features(cars, color_space=color_space,
                                 spatial_size=spatial_size, hist_bins=hist_bins,

@@ -111,7 +111,6 @@ ystart = 400
 ystop = 656
 scale = 1.5
 
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-                    hist_bins)
+# out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-plt.imshow(out_img)
+# plt.imshow(out_img)
