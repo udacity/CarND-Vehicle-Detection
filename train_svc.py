@@ -15,10 +15,13 @@ from sklearn.externals import joblib
 # Read in cars and notcars
 cars = []
 notcars = []
-images = glob.glob('./vehicles/*/*.png')
+images = glob.glob('./train_images/vehicles/*/*.png') # windows
+# images = glob.glob('./train_images/vehicles/*/*.png') # mac
 for image in images:
     cars.append(image)
-images = glob.glob('./non-vehicles/*/*.png')
+
+images = glob.glob('./train_images/non-vehicles/*/*.png') # windows
+# images = glob.glob('./train_images/non-vehicles/*/*.png') # mac
 for image in images:
     notcars.append(image)
 
