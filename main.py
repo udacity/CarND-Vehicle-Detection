@@ -10,7 +10,7 @@ import cv2
 # If the input is the camera, pass 0 instead of the video file name
 cap = cv2.VideoCapture('test_video.mp4')
 # create output video
-fourcc = cv2.VideoWriter_fourcc(*'avc1')
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 out = cv2.VideoWriter('project_result.mp4',fourcc, 25.0, (1280,720))
 
 # Check if camera opened successfully
