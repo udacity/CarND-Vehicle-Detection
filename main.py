@@ -20,8 +20,6 @@ while cap.isOpened():
     ret, frame = cap.read()
     if ret == True:
         numFrame += 1
-        # Display the resulting frame
-        cv2.imshow('Frame', frame)
 
         # get box list for current frame
         out_img,box_list = find_cars()
@@ -35,6 +33,8 @@ while cap.isOpened():
 
             # save current frame
             out.write(xxx)
+            # Display the resulting frame
+            cv2.imshow('Frame', xxx)
         # Press Q on keyboard to  exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break

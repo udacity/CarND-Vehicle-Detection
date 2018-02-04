@@ -5,7 +5,6 @@ import pickle
 import cv2
 from scipy.ndimage.measurements import label
 
-
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
     for box in bbox_list:
@@ -38,3 +37,26 @@ def draw_labeled_bboxes(img, labels):
         cv2.rectangle(img, bbox[0], bbox[1], (0, 0, 255), 6)
     # Return the image
     return img
+
+
+def gen_boxlist(img, numFrame, finalList, boxList, heatmap, threshold):
+    if numFrame <= 10:
+        # add box_list to list
+        finalList.append(boxList)
+        for box in boxList:
+            heatmap[box[0]:box[2], box[1]:box[3]] += 1
+    else:
+        # delete old list, add new list, apply threshold
+        oldList = finalList.pop(0)
+        for box in oldList:
+            heatmap[box[0]:box[2], box[1]:box[3]] -= 1
+        for box in boxList:
+            heatmap[box[0]:box[2], box[1]:box[3]] += 1
+        heatmapSh = apply_threshold(heatmap, threshold)
+
+        # draw_labeled_bboxes
+        labels = label(heatmapSh)
+        imgResult = draw_labeled_bboxes(img, labels)
+
+        draw_labeled_bboxes
+        return imgResult, heatmap
