@@ -47,7 +47,7 @@ img = mpimg.imread('./test_images/test1.jpg')
 print(img)
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel):
     draw_img = np.copy(img)
     img = img.astype(np.float32) / 255
 
@@ -86,7 +86,14 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             hog_feat1 = hog1[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
             hog_feat2 = hog2[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
             hog_feat3 = hog3[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+            if hog_channel == 1:
+                hog_features = hog_feat1
+            elif hog_channel == 2:
+                hog_features = hog_feat2
+            elif hog_channel == 3:
+                hog_features = hog_feat3
+            else:
+                hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
 
             xleft = xpos * pix_per_cell
             ytop = ypos * pix_per_cell
@@ -117,7 +124,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 ystart = 400
 ystop = 656
 scale = 1.5
+hog_channel = 2
 
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-
+out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
+print("print images")
+# plt.figure(1)
 plt.imshow(out_img)
