@@ -10,9 +10,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.externals import joblib
 from lesson_functions import *
 
-dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-# svc = dist_pickle["svc"]
-svc = joblib.load('svc_model.pkl')
+# dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+with open('svc_pickle.p', 'rb') as f:
+    # The protocol version used is detected automatically, so we do not
+    # have to specify it.
+    dist_pickle = pickle.load(f)
+
+svc = dist_pickle["svc"]
+# svc = joblib.load('svc_model.pkl')
 X_scaler = dist_pickle["scaler"]
 
 color_space = dist_pickle["color_space"]
