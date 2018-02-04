@@ -78,6 +78,8 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
 
+    bboxes = []
+
     for xb in range(nxsteps):
         for yb in range(nysteps):
             ypos = yb * cells_per_step
@@ -117,8 +119,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 win_draw = np.int(window * scale)
                 cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
                               (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
+                bboxes.append([xbox_left, ytop_draw + ystart, xbox_left + win_draw, ytop_draw + win_draw + ystart])
 
-    return draw_img
+    return draw_img, bboxes
 
 
 ystart = 400
@@ -126,8 +129,10 @@ ystop = 656
 scale = 1.5
 hog_channel = 2
 
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
-print("print images")
-# plt.figure(1)
+out_img, bbox = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
+
+print("bbox",bbox)
+print("shape", len(bbox))
+# print("print images")
 plt.imshow(out_img)
 plt.show()
