@@ -130,3 +130,4 @@ out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_ce
 print("print images")
 # plt.figure(1)
 plt.imshow(out_img)
+plt.show()
