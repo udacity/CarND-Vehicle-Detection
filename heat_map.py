@@ -43,21 +43,24 @@ def gen_frame_result(img, numFrame, finalList, bbox, heatmap, threshold):
     if numFrame <= 10:
         # add box_list to list
         finalList.append(bbox)
-        for box in bbox:
-            heatmap[box[0]:box[2], box[1]:box[3]] += 1
+        if len(bbox) > 0:
+            for box in bbox:
+                heatmap[box[1]:box[3], box[0]:box[2]] += 1
+        imgResult = img
     else:
         # delete old list, add new list, apply threshold
         oldList = finalList.pop(0)
         finalList.append(bbox)
-        for box in oldList:
-            heatmap[box[0]:box[2], box[1]:box[3]] -= 1
-        for box in bbox:
-            heatmap[box[0]:box[2], box[1]:box[3]] += 1
+        if len(oldList) > 0:
+            for box in oldList:
+                heatmap[box[1]:box[3], box[0]:box[2]] -= 1
+        if len(bbox) > 0:
+            for box in bbox:
+                heatmap[box[1]:box[3], box[0]:box[2]] += 1
         heatmapSh = apply_threshold(heatmap, threshold)
 
         # draw_labeled_bboxes
         labels = label(heatmapSh)
         imgResult = draw_labeled_bboxes(img, labels)
 
-        draw_labeled_bboxes
-        return imgResult, heatmap, finalList
+    return imgResult, heatmap, finalList

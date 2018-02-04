@@ -43,8 +43,8 @@ hist_bins = dist_pickle["hist_bins"]
 # y_start_stop = [450, 700] # Min and max in y to search in slide_window()
 
 
-img = mpimg.imread('./test_images/test1.jpg')
-print(img)
+# img = mpimg.imread('./test_images/test1.jpg')
+# print(img)
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel):
@@ -129,10 +129,10 @@ ystop = 656
 scale = 1.5
 hog_channel = 2
 
-out_img, bbox = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
+# out_img, bbox = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
 
-print("bbox",bbox)
-print("shape", len(bbox))
-# print("print images")
-plt.imshow(out_img)
-plt.show()
+# print("bbox",bbox)
+# print("shape", len(bbox))
+# # print("print images")
+# plt.imshow(out_img)
+# plt.show()

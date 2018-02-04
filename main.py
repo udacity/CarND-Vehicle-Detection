@@ -1,24 +1,26 @@
+from heat_map import *
+from hog_subsample import *
 from lesson_functions import *
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-from heat_map import *
-from hog_subsample import *
+
 
 # Create a VideoCapture object and read from input file
 # If the input is the camera, pass 0 instead of the video file name
-cap = cv2.VideoCapture('project_video.mp4')
+cap = cv2.VideoCapture('test_video.mp4')
 # create output video
-out = cv2.VideoWriter('project_result.mp4',fourcc, 25.0, (640,480))
+fourcc = cv2.VideoWriter_fourcc(*'avc1')
+out = cv2.VideoWriter('project_result.mp4',fourcc, 25.0, (1280,720))
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
     print("Error opening video stream or file")
 
-finalList = [[[]]]
+finalList = []
 numFrame = 0
-heatmap = np.zeros(720, 1280).astype(np.float)
-threshold = 3
+heatmap = np.zeros((720, 1280), dtype=float)
+threshold = 6
 
 # ystart = 400
 # ystop = 656
