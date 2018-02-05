@@ -30,8 +30,8 @@ hist_bins = dist_pickle["hist_bins"]
 hog_channel = dist_pickle["hog_channel"]
 ystart = 400
 ystop = 650
-scales = [0.9, 1.2, 1.5]
-
+# scales = [0.9, 1.2, 1.5]
+scales = [0.25, 0.5, 1, 1.5, 2]
 
 def find_cars(img):
     bboxes = []
@@ -41,7 +41,7 @@ def find_cars(img):
         if len(box_each_scale) > 0:
             bboxes.append(box_each_scale)
     # print(len(bboxes))
-    np.reshape(bboxes, (1, -1))
+    # np.reshape(bboxes, (1, -1))
     # print(bboxes)
     return bboxes
 # color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb

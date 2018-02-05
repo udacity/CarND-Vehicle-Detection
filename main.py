@@ -16,7 +16,7 @@ cap = cv2.VideoCapture('project_video.mp4')
 
 # create output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('project_result.mp4',fourcc, 25.0, (1280,720))
+out = cv2.VideoWriter('project_cut_result.mp4',fourcc, 25.0, (1280,720))
 
 # Check if camera opened successfully
 if cap.isOpened() == False:
@@ -25,7 +25,7 @@ if cap.isOpened() == False:
 finalList = []
 numFrame = 0
 heatmap = np.zeros((720, 1280), dtype=float)
-threshold = 5
+threshold = 9
 
 
 while cap.isOpened():
@@ -40,6 +40,9 @@ while cap.isOpened():
         # Here, frame is BGR format because of cv2 --> cap.read() function.
         # We need to transfer it to RGB for prediction because model is trained in RGB with value 0 - 1.
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # plt.imshow(frame)
+        # plt.show()
+
         bbox = find_cars(frame)
 
         imgResult, heatmap, finalList = gen_frame_result(frame, numFrame, finalList, bbox, heatmap, threshold)
