@@ -28,18 +28,19 @@ for image in images:
 
 # Reduce the sample size because
 # The quiz evaluator times out after 13s of CPU time
+
+# sample_size = 2000
+# cars = cars[0:sample_size]
+# notcars = notcars[0:sample_size]
 print("number of car images", len(cars))
 print("number of noncar images", len(notcars))
-sample_size = 1000
-cars = cars[0:sample_size]
-notcars = notcars[0:sample_size]
 
 ### TODO: Tweak these parameters and see how the results change.
-color_space = 'RGB'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 60  # HOG orientations
-pix_per_cell = 6  # HOG pixels per cell
-cell_per_block = 3  # HOG cells per block
-hog_channel = 1  # Can be 0, 1, 2, or "ALL"
+color_space = 'HSV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+orient = 30  # HOG orientations
+pix_per_cell = 16  # HOG pixels per cell
+cell_per_block = 2  # HOG cells per block
+hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
 spatial_size = (16, 16)  # Spatial binning dimensions
 hist_bins = 32  # Number of histogram bins
 spatial_feat = True  # Spatial features on or off

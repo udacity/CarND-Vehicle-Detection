@@ -27,7 +27,10 @@ cell_per_block = dist_pickle["cell_per_block"]
 hog_channel = dist_pickle["hog_channel"]
 spatial_size = dist_pickle["spatial_size"]
 hist_bins = dist_pickle["hist_bins"]
-
+hog_channel = dist_pickle["hog_channel"]
+ystart = 400
+ystop = 650
+scale = 1.5
 
 
 # color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -124,15 +127,13 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     return draw_img, bboxes
 
 
-ystart = 400
-ystop = 656
-scale = 1.5
-hog_channel = 2
 
+# hog_channel = 2
+#
 # out_img, bbox = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
-
+#
 # print("bbox",bbox)
 # print("shape", len(bbox))
-# # print("print images")
+print("print images")
 # plt.imshow(out_img)
 # plt.show()

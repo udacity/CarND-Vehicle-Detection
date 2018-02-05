@@ -10,7 +10,7 @@ import cv2
 # If the input is the camera, pass 0 instead of the video file name
 cap = cv2.VideoCapture('test_video.mp4')
 # create output video
-fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('project_result.mp4',fourcc, 25.0, (1280,720))
 
 # Check if camera opened successfully
@@ -20,7 +20,7 @@ if cap.isOpened() == False:
 finalList = []
 numFrame = 0
 heatmap = np.zeros((720, 1280), dtype=float)
-threshold = 6
+threshold = 1
 
 # ystart = 400
 # ystop = 656
