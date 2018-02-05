@@ -10,9 +10,9 @@ import cv2
 # If the input is the camera, pass 0 instead of the video file name
 
 #  project video
-# cap = cv2.VideoCapture('project_video.mp4')
+cap = cv2.VideoCapture('project_video.mp4')
 # test video
-cap = cv2.VideoCapture('test_video.mp4')
+# cap = cv2.VideoCapture('test_video.mp4')
 
 # create output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -35,9 +35,10 @@ while cap.isOpened():
 
     if ret == True:
         numFrame += 1
-        # print(frame)
-        # cv2.imwrite("frame%d.png" % numFrame, frame)
         # get box list for current frame
+        # note that when training the data, the input is RGB because of mpimg.imread() function.
+        # Here, frame is BGR format because of cv2 --> cap.read() function.
+        # We need to transfer it to RGB for prediction because model is trained in RGB with value 0 - 1.
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         bbox = find_cars(frame)
 
