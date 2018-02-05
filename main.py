@@ -42,7 +42,9 @@ while cap.isOpened():
         bbox = find_cars(frame)
 
         imgResult, heatmap, finalList = gen_frame_result(frame, numFrame, finalList, bbox, heatmap, threshold)
+
         # save current frame
+        imgResult = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         out.write(imgResult)
 
         # Display the resulting frame
