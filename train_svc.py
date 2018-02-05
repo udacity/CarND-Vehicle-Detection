@@ -13,7 +13,7 @@ from lesson_functions import *
 from sklearn.model_selection import train_test_split
 from sklearn.externals import joblib
 
-# Read in cars and notcars
+# Read in cars and notcars in RGB
 cars = []
 notcars = []
 # images = glob.glob('./train_images/vehicles/*/*.png') # windows
