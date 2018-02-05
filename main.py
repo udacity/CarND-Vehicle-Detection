@@ -30,14 +30,15 @@ threshold = 5
 
 while cap.isOpened():
     # Capture frame-by-frame
-    # cap.read() generate a RGB frame 0-255
+    # cap.read() generate a BGR????!!!!!!! frame 0-255
     ret, frame = cap.read()
 
     if ret == True:
         numFrame += 1
         # print(frame)
+        # cv2.imwrite("frame%d.png" % numFrame, frame)
         # get box list for current frame
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         bbox = find_cars(frame)
 
         imgResult, heatmap, finalList = gen_frame_result(frame, numFrame, finalList, bbox, heatmap, threshold)
