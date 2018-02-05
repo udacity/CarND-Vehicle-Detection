@@ -30,9 +30,20 @@ hist_bins = dist_pickle["hist_bins"]
 hog_channel = dist_pickle["hog_channel"]
 ystart = 400
 ystop = 650
-scale = 1.5
+scales = [1.5, 2.0, 2.5]
 
 
+def find_cars(img):
+    bboxes = []
+    for scale in scales:
+        out_img, box_each_scale = find_bbox(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel)
+        # print(box_each_scale)
+        if len(box_each_scale) > 0:
+            bboxes.append(box_each_scale)
+    # print(len(bboxes))
+    np.reshape(bboxes, (1, -1))
+    # print(bboxes)
+    return bboxes
 # color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
 # orient = 60  # HOG orientations
 # pix_per_cell = 6 # HOG pixels per cell
@@ -50,7 +61,7 @@ scale = 1.5
 # print(img)
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel):
+def find_bbox(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, hog_channel):
     draw_img = np.copy(img)
     img = img.astype(np.float32) / 255
 

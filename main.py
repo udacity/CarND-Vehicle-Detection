@@ -34,8 +34,7 @@ while cap.isOpened():
         numFrame += 1
 
         # get box list for current frame
-        out_img, bbox = find_cars(frame, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
-                                  spatial_size, hist_bins, hog_channel)
+        bbox = find_cars(frame)
 
         imgResult, heatmap, finalList = gen_frame_result(frame, numFrame, finalList, bbox, heatmap, threshold)
         # save current frame
